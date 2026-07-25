@@ -1,0 +1,107 @@
+"use client";
+
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Check, Package } from "lucide-react";
+import { premiumSpring, fadeUp, staggerContainer } from "@/lib/motion";
+import { useEffect, useState } from "react";
+import confetti from "canvas-confetti";
+
+export default function CheckoutSuccessPage() {
+  const [isMounted, setIsMounted] = useState(false);
+  // Generate a random order ID
+  const [orderId] = useState(() => "SK" + Math.random().toString().substring(2, 10).toUpperCase());
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), 0);
+    // Fire confetti!
+    const duration = 3 * 1000;
+    const end = Date.now() + duration;
+
+    const frame = () => {
+      confetti({
+        particleCount: 5,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ["#0F764D", "#1E3A8A", "#D1C4A5"]
+      });
+      confetti({
+        particleCount: 5,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ["#0F764D", "#1E3A8A", "#D1C4A5"]
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    };
+    frame();
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!isMounted) return null;
+
+  return (
+    <div className="min-h-screen bg-[#FDFBF7] pt-32 pb-20 px-4">
+      <motion.div 
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+        className="max-w-2xl mx-auto bg-white rounded-3xl p-8 sm:p-12 shadow-[0_8px_40px_rgba(0,0,0,0.06)] border border-brand-gray/5 text-center"
+      >
+        <motion.div 
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={premiumSpring}
+          className="w-24 h-24 bg-brand-green/10 text-brand-green rounded-full flex items-center justify-center mx-auto mb-8 border border-brand-green/20"
+        >
+          <Check className="w-10 h-10" />
+        </motion.div>
+
+        <motion.h1 variants={fadeUp} className="font-heading text-3xl sm:text-4xl font-bold text-brand-blue mb-4">
+          Order Confirmed!
+        </motion.h1>
+        
+        <motion.p variants={fadeUp} className="text-brand-gray mb-8 max-w-md mx-auto">
+          Thank you for choosing Shop Kareta. Your order has been placed successfully and is being prepared for dispatch.
+        </motion.p>
+
+        <motion.div variants={fadeUp} className="bg-brand-light/50 rounded-2xl p-6 flex justify-between items-center mb-10 border border-brand-gray/10 text-left">
+          <div>
+            <span className="text-xs font-semibold text-brand-gray uppercase tracking-wider block mb-1">Order Number</span>
+            <span className="font-bold text-brand-blue text-lg">{orderId}</span>
+          </div>
+          <div className="text-right">
+            <span className="text-xs font-semibold text-brand-gray uppercase tracking-wider block mb-1">Estimated Delivery</span>
+            <span className="font-bold text-brand-green text-lg">Oct 24, 2026</span>
+          </div>
+        </motion.div>
+
+        <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link href="/shop">
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              transition={premiumSpring}
+              className="w-full sm:w-auto h-14 px-8 bg-brand-green text-white rounded-full font-medium hover:bg-[#0c593a] transition-colors"
+            >
+              Continue Shopping
+            </motion.button>
+          </Link>
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            transition={premiumSpring}
+            className="w-full sm:w-auto h-14 px-8 bg-white border-2 border-brand-gray/20 text-brand-blue rounded-full font-medium flex items-center justify-center gap-2 hover:border-brand-blue transition-colors"
+          >
+            <Package className="w-4 h-4" />
+            <span>Track Order</span>
+          </motion.button>
+        </motion.div>
+
+      </motion.div>
+    </div>
+  );
+}
