@@ -10,6 +10,7 @@ import { ProductSections } from "@/components/storefront/ProductSections";
 import { RelatedProducts } from "@/components/storefront/RelatedProducts";
 import { ProductCertifications } from "@/components/storefront/ProductCertifications";
 import { StickyPurchaseBar } from "@/components/storefront/StickyPurchaseBar";
+import { ProductReviews } from "@/components/storefront/ProductReviews";
 import BlurFade from "@/components/ui/blur-fade";
 
 interface ProductPageProps {
@@ -211,6 +212,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
       {/* Deep-Scroll Catalog Information (Overview, Benefits, Ingredients, Usage) */}
       <ProductSections product={product} />
+
+      {/* Product Reviews (Future-Ready) */}
+      <ProductReviews productId={product.id} />
 
       {/* Cross-Selling */}
       <RelatedProducts currentProductId={product.id} category={product.category} />
