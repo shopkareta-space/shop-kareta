@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
 import { motion } from "framer-motion";
 import { slideUp, magneticSpring } from "@/lib/motion";
+import Image from "next/image";
 
 interface ProductCardProps {
   id: string;
@@ -12,6 +13,7 @@ interface ProductCardProps {
   category?: string;
   price: number;
   originalPrice?: number;
+  images?: string[];
   imageAlt?: string;
   badge?: string;
 }
@@ -23,8 +25,10 @@ export default function ProductCard({
   category,
   price,
   originalPrice,
+  images,
   badge,
 }: ProductCardProps) {
+  const primaryImage = images?.[0];
   return (
     <motion.div 
       variants={slideUp}
@@ -37,15 +41,23 @@ export default function ProductCard({
     >
       {/* Image Container */}
       <Link href={`/products/${id}`} className="relative aspect-[4/5] bg-[#F6F3EC] overflow-hidden block">
-        {/* Placeholder for real product image */}
-        <motion.div 
-          className="absolute inset-0 flex flex-col items-center justify-center text-brand-gray/30 transition-transform duration-700 ease-out group-hover:scale-105"
-        >
-          <div className="w-16 h-16 rounded-full bg-white/50 flex items-center justify-center mb-3 shadow-sm backdrop-blur-sm border border-white/20">
-            <span className="font-heading font-medium text-2xl text-brand-gray/40">SK</span>
-          </div>
-          <span className="text-[10px] uppercase tracking-[0.2em] font-medium opacity-50">Placeholder</span>
-        </motion.div>
+        {primaryImage ? (
+          <Image 
+            src={primaryImage} 
+            alt={name} 
+            fill 
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-105" 
+          />
+        ) : (
+          <motion.div 
+            className="absolute inset-0 flex flex-col items-center justify-center text-brand-gray/30 transition-transform duration-700 ease-out group-hover:scale-105"
+          >
+            <div className="w-16 h-16 rounded-full bg-white/50 flex items-center justify-center mb-3 shadow-sm backdrop-blur-sm border border-white/20">
+              <span className="font-heading font-medium text-2xl text-brand-gray/40">SK</span>
+            </div>
+            <span className="text-[10px] uppercase tracking-[0.2em] font-medium opacity-50">Placeholder</span>
+          </motion.div>
+        )}
 
         {badge && (
           <div className="absolute top-4 left-4 bg-[#D4AF37] text-[#0D1B2A] text-[10px] font-bold uppercase tracking-wider py-1.5 px-3 rounded-sm z-10 shadow-sm">

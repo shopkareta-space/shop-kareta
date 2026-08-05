@@ -7,7 +7,7 @@ import { QuantitySelector } from "./QuantitySelector";
 import { premiumSpring } from "@/lib/motion";
 import { useCartStore } from "@/store/cartStore";
 import { useRouter } from "next/navigation";
-import type { Product } from "@/data/products";
+import type { Product } from "@/types/product";
 
 interface PurchaseActionsProps {
   product: Product;

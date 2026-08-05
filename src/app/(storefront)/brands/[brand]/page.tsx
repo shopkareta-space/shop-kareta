@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { products } from "@/data/products";
+import { getProductsByBrand } from "@/lib/services/product.service";
 import { SatvamTemplate } from "@/components/storefront/brands/SatvamTemplate";
 import { VediqueTemplate } from "@/components/storefront/brands/VediqueTemplate";
 import { LaskoviaTemplate } from "@/components/storefront/brands/LaskoviaTemplate";
@@ -38,7 +38,7 @@ export default async function BrandPage({ params }: BrandPageProps) {
     notFound();
   }
 
-  const brandProducts = products.filter(p => p.brand === brandFilter);
+  const brandProducts = await getProductsByBrand(brandFilter);
 
   // Render the specific template
   if (brand === "satvam") {

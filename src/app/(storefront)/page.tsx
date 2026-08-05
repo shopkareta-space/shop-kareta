@@ -3,9 +3,13 @@ import Image from "next/image";
 import { ArrowRight, Leaf, ShieldCheck, Sparkles, Truck, CheckCircle, Star } from "lucide-react";
 import ProductCard from "@/components/storefront/ProductCard";
 import BlurFade from "@/components/ui/blur-fade";
-import Marquee from "@/components/ui/marquee";
 
-export default function Homepage() {
+import { getFeaturedProducts } from "@/lib/services/product.service";
+import { CategoryShowcase } from "@/components/storefront/CategoryShowcase";
+
+export default async function Homepage() {
+  const top4Products = await getFeaturedProducts(4);
+
   return (
     <div className="flex flex-col bg-brand-light">
       
@@ -15,9 +19,9 @@ export default function Homepage() {
         <div className="absolute inset-0 bg-gradient-to-r from-[#0D1B2A] via-[#0D1B2A]/90 to-transparent z-0" />
         
         <div className="container mx-auto px-4 py-20 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
             {/* Left Content */}
-            <div className="flex-1 max-w-2xl text-left">
+            <div className="w-full lg:w-[45%] text-left">
               <BlurFade delay={0.1}>
                 <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-gold/10 text-brand-gold font-semibold tracking-wider uppercase text-sm mb-6 border border-brand-gold/20">
                   <Sparkles className="w-4 h-4" /> SK Holdings Premium
@@ -53,38 +57,43 @@ export default function Homepage() {
                 </div>
               </BlurFade>
               
-              <BlurFade delay={0.5} className="mt-12 flex items-center gap-6">
-                <div className="flex -space-x-3">
-                  {[1,2,3,4].map((i) => (
-                    <div key={i} className={`w-10 h-10 rounded-full border-2 border-[#0D1B2A] bg-brand-light flex items-center justify-center overflow-hidden`}>
-                       <img src={`https://api.dicebear.com/7.x/faces/svg?seed=${i}&backgroundColor=e2e8f0`} alt="User" />
-                    </div>
-                  ))}
-                </div>
-                <div>
-                  <div className="flex text-brand-gold mb-1">
-                    {[1,2,3,4,5].map((i) => <Star key={i} className="w-4 h-4 fill-current" />)}
-                  </div>
-                  <p className="text-xs text-white/60">Trusted by 10,000+ customers</p>
-                </div>
-              </BlurFade>
+
             </div>
             
-            {/* Right Product Showcase Placeholder */}
-            <div className="flex-1 w-full relative hidden lg:block">
-              <BlurFade delay={0.4} className="relative z-10 w-full aspect-square max-w-[600px] ml-auto">
-                <div className="w-full h-full rounded-full bg-gradient-to-tr from-brand-green/20 to-brand-gold/20 flex items-center justify-center border border-white/10 relative overflow-hidden backdrop-blur-3xl shadow-2xl">
-                  {/* Decorative Elements */}
-                  <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-brand-green/40 rounded-full blur-3xl" />
-                  <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-brand-gold/20 rounded-full blur-3xl" />
-                  
-                  <div className="text-center z-10">
-                    <Leaf className="w-16 h-16 text-white/50 mx-auto mb-4" />
-                    <p className="font-heading text-2xl font-bold text-white tracking-widest uppercase opacity-50">Premium Showcase</p>
-                  </div>
+            {/* Right Promotional Banner */}
+            <div className="w-full lg:w-[55%] relative mt-12 lg:mt-0 flex justify-center lg:justify-end">
+              <BlurFade delay={0.4} yOffset={20} className="w-full max-w-[800px]">
+                <div className="w-full rounded-[24px] overflow-hidden shadow-xl hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] transform hover:scale-[1.02] transition-all duration-300">
+                  <Image 
+                    src="/images/promotional-banner.jpg"
+                    alt="Nature Heals - Shop Kareta Promotional Banner"
+                    width={1600}
+                    height={900}
+                    className="w-full h-auto object-cover z-0"
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 55vw"
+                  />
                 </div>
               </BlurFade>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 1.5 Featured Categories */}
+      <section className="py-16 bg-white border-b border-brand-gray/10">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="text-brand-green font-semibold tracking-wider uppercase text-sm mb-2 block">Top Selections</span>
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-brand-blue mb-4">Featured Categories</h2>
+          </div>
+          
+          <CategoryShowcase featuredOnly={true} />
+          
+          <div className="mt-12 flex justify-center">
+            <Link href="/categories" className="inline-flex items-center justify-center bg-brand-light text-brand-blue px-8 py-4 rounded-xl font-semibold hover:bg-brand-gray/10 transition-colors border border-brand-gray/20">
+              View All Categories
+            </Link>
           </div>
         </div>
       </section>
@@ -210,49 +219,7 @@ export default function Homepage() {
             </Link>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Link href="/categories/beauty-care" className="group relative h-96 rounded-3xl overflow-hidden bg-brand-light flex flex-col justify-end p-8 transition-all duration-500">
-              <div className="absolute inset-0 bg-[#0D1B2A]/40 group-hover:bg-[#0D1B2A]/60 transition-colors z-10" />
-              <div className="absolute inset-0 flex items-center justify-center text-white/30 z-0 bg-brand-blue/5">
-                <Sparkles className="w-32 h-32 opacity-20" />
-              </div>
-              <div className="relative z-20 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                <span className="bg-white text-[#0D1B2A] text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full mb-4 inline-block">Skin & Hair</span>
-                <h3 className="font-heading text-3xl font-bold text-white mb-2">Natural Beauty</h3>
-                <p className="text-white/80 flex items-center gap-2 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
-                  Explore Collection <ArrowRight className="w-4 h-4" />
-                </p>
-              </div>
-            </Link>
-            
-            <Link href="/categories/energy-wellness" className="group relative h-96 rounded-3xl overflow-hidden bg-brand-light flex flex-col justify-end p-8 transition-all duration-500">
-              <div className="absolute inset-0 bg-[#0F6B46]/40 group-hover:bg-[#0F6B46]/60 transition-colors z-10" />
-              <div className="absolute inset-0 flex items-center justify-center text-white/30 z-0 bg-brand-green/5">
-                <Leaf className="w-32 h-32 opacity-20" />
-              </div>
-              <div className="relative z-20 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                <span className="bg-white text-[#0F6B46] text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full mb-4 inline-block">Immunity</span>
-                <h3 className="font-heading text-3xl font-bold text-white mb-2">Energy & Vitality</h3>
-                <p className="text-white/80 flex items-center gap-2 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
-                  Explore Collection <ArrowRight className="w-4 h-4" />
-                </p>
-              </div>
-            </Link>
-            
-            <Link href="/categories/pain-relief" className="group relative h-96 rounded-3xl overflow-hidden bg-brand-light flex flex-col justify-end p-8 transition-all duration-500 md:col-span-2 lg:col-span-1">
-              <div className="absolute inset-0 bg-amber-900/40 group-hover:bg-amber-900/60 transition-colors z-10" />
-              <div className="absolute inset-0 flex items-center justify-center text-white/30 z-0 bg-amber-900/5">
-                <ShieldCheck className="w-32 h-32 opacity-20" />
-              </div>
-              <div className="relative z-20 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                <span className="bg-white text-amber-900 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full mb-4 inline-block">Orthopedic</span>
-                <h3 className="font-heading text-3xl font-bold text-white mb-2">Pain Relief</h3>
-                <p className="text-white/80 flex items-center gap-2 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
-                  Explore Collection <ArrowRight className="w-4 h-4" />
-                </p>
-              </div>
-            </Link>
-          </div>
+          <CategoryShowcase />
         </div>
       </section>
 
@@ -270,34 +237,19 @@ export default function Homepage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <ProductCard 
-              id="cellogen-1000"
-              name="Cellogen Premium Antioxidant Herbal Juice"
-              brand="Vedique Nutrition"
-              price={3449}
-              badge="Bestseller"
-            />
-            <ProductCard 
-              id="shilajit-resin-20g"
-              name="Himalayan Shilajit Pure Resin (75% Fulvic Acid)"
-              brand="URMLIFE"
-              price={1499}
-              originalPrice={1999}
-              badge="Pure Authentic"
-            />
-            <ProductCard 
-              id="luxe-hair-oil-100ml"
-              name="L'Aveira Luxe Hair Herbal Oil"
-              brand="L'Aveira"
-              price={780}
-            />
-            <ProductCard 
-              id="orthocare-kit"
-              name="Sandhiveda Orthocare Oil"
-              brand="Satvam Wellness"
-              price={349}
-              badge="Doctor Curated"
-            />
+            {top4Products.map((product) => (
+              <ProductCard 
+                key={product.id}
+                id={product.id}
+                name={product.name}
+                brand={product.brand}
+                category={product.category}
+                price={product.price}
+                originalPrice={product.originalPrice}
+                badge={product.badge}
+                images={product.images}
+              />
+            ))}
           </div>
         </div>
       </section>
@@ -352,47 +304,6 @@ export default function Homepage() {
         </div>
       </section>
 
-      {/* 6. Testimonials Preview */}
-      <section className="py-24 bg-brand-light overflow-hidden">
-        <div className="container mx-auto px-4 mb-16 text-center max-w-2xl">
-          <span className="text-brand-green font-semibold tracking-wider uppercase text-sm mb-2 block">Customer Stories</span>
-          <h2 className="font-heading text-3xl md:text-5xl font-bold text-brand-blue mb-4">Real Results. Real People.</h2>
-          <p className="text-brand-gray text-lg">Don't just take our word for it. See what our community has to say about their wellness journey.</p>
-        </div>
-        
-        <div className="relative">
-          <Marquee className="[--duration:40s]">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="mx-4 w-[350px] bg-white rounded-3xl p-8 border border-brand-gray/10 shadow-sm flex flex-col justify-between">
-                <div>
-                  <div className="flex text-brand-gold mb-6">
-                    <Star className="w-5 h-5 fill-current" />
-                    <Star className="w-5 h-5 fill-current" />
-                    <Star className="w-5 h-5 fill-current" />
-                    <Star className="w-5 h-5 fill-current" />
-                    <Star className="w-5 h-5 fill-current" />
-                  </div>
-                  <p className="text-brand-blue font-medium text-lg leading-relaxed mb-8">
-                    "Since using the Vedique Nutrition line, my energy levels have completely transformed. The quality is unmatched and the results speak for themselves. Highly recommended!"
-                  </p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-brand-light border border-brand-gray/20 overflow-hidden flex items-center justify-center">
-                    <img src={`https://api.dicebear.com/7.x/faces/svg?seed=${i+10}&backgroundColor=e2e8f0`} alt="User" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-brand-blue text-sm">Verified Customer</h4>
-                    <p className="text-xs text-brand-gray">Verified Purchase</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </Marquee>
-          
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-brand-light"></div>
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-brand-light"></div>
-        </div>
-      </section>
 
     </div>
   );

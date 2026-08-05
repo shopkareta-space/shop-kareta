@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { scaleUp, staggerContainer } from "@/lib/motion";
 import { ShieldCheck, Award, Leaf, CheckCircle2 } from "lucide-react";
-import type { Product } from "@/data/products";
+import type { Product } from "@/types/product";
 
 interface ProductCertificationsProps {
   product: Product;

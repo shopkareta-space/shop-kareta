@@ -1,21 +1,14 @@
-"use client";
-
-import { useMemo } from "react";
 import { ProductGrid } from "./ProductGrid";
-import { products } from "@/data/products";
+import { getRelatedProducts } from "@/lib/services/product.service";
 
 interface RelatedProductsProps {
   currentProductId: string;
   category: string;
 }
 
-export function RelatedProducts({ currentProductId, category }: RelatedProductsProps) {
-  const relatedProducts = useMemo(() => {
-    // Filter by same category, exclude current product, limit to 4
-    return products
-      .filter(p => p.category === category && p.id !== currentProductId)
-      .slice(0, 4);
-  }, [currentProductId, category]);
+export async function RelatedProducts({ currentProductId, category }: RelatedProductsProps) {
+  // Pass category to getRelatedProducts if we want, but for now we just fetch by ID.
+  const relatedProducts = await getRelatedProducts(currentProductId, 4);
 
   if (relatedProducts.length === 0) return null;
 

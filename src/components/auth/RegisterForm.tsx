@@ -9,6 +9,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { registerSchema, type RegisterFormData } from "@/lib/validations/auth";
 import { useAuthStore } from "@/store/authStore";
 import { PasswordStrength } from "./PasswordStrength";
+import { createClient } from "@/lib/supabase/client";
 
 export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,6 +22,7 @@ export function RegisterForm() {
     register,
     control,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -37,19 +39,27 @@ export function RegisterForm() {
   const passwordValue = useWatch({ control, name: "password" });
 
   const onSubmit = async (data: RegisterFormData) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1200));
+    const supabase = createClient();
     
-    // Mock successful registration & auto-login
-    login({
-      id: "usr_" + Math.random().toString(36).substring(7),
+    const { error, data: authData } = await supabase.auth.signUp({
       email: data.email,
-      fullName: data.fullName,
-      mobile: data.mobile || undefined,
-      avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${data.fullName}`,
+      password: data.password,
+      options: {
+        data: {
+          full_name: data.fullName,
+          mobile: data.mobile || null,
+          avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.fullName)}`,
+        }
+      }
     });
+
+    if (error) {
+      return setError("root", { type: "manual", message: error.message });
+    }
     
+    // Successful registration & auto-login, onAuthStateChange in SessionProvider handles state
     router.push("/");
+    router.refresh();
   };
 
   return (
@@ -144,6 +154,12 @@ export function RegisterForm() {
         </label>
         {errors.acceptTerms && <p className="mt-1.5 text-sm text-red-500 font-medium ml-7">{errors.acceptTerms.message}</p>}
       </div>
+
+      {errors.root && (
+        <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm font-medium text-center mt-4">
+          {errors.root.message}
+        </div>
+      )}
 
       <button
         type="submit"

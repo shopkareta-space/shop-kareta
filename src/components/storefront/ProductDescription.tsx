@@ -1,6 +1,6 @@
 "use client";
 
-import type { Product } from "@/data/products";
+import type { Product } from "@/types/product";
 import BlurFade from "@/components/ui/blur-fade";
 
 export function ProductDescription({ product }: { product: Product }) {

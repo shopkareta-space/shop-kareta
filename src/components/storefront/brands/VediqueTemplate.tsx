@@ -6,7 +6,7 @@ import ProductCard from "@/components/storefront/ProductCard";
 import { ProductReviews } from "@/components/storefront/ProductReviews";
 import BlurFade from "@/components/ui/blur-fade";
 import { ShieldCheck, Sparkles, Microscope, Hexagon, TestTube } from "lucide-react";
-import type { Product } from "@/data/products";
+import type { Product } from "@/types/product";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 

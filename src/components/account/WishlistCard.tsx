@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ShoppingCart, Trash2 } from "lucide-react";
-import { type Product } from "@/data/products";
+import { type Product } from "@/types/product";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useCartStore } from "@/store/cartStore";
 

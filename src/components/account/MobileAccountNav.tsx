@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Drawer, DrawerTrigger, DrawerContent, DrawerClose } from "@/components/ui/drawer";
 import { Menu, X, LayoutDashboard, ShoppingBag, Heart, MapPin, User, Settings, LogOut } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 const navItems = [
   { href: "/account", label: "Dashboard", icon: LayoutDashboard },
@@ -17,7 +19,8 @@ const navItems = [
 
 export function MobileAccountNav() {
   const pathname = usePathname();
-  const { logout, user } = useAuthStore();
+  const { user } = useAuthStore();
+  const router = useRouter();
 
   return (
     <Drawer>
@@ -73,7 +76,12 @@ export function MobileAccountNav() {
           
           <div className="p-6 border-t border-brand-gray/10">
             <button
-              onClick={logout}
+              onClick={async () => {
+                const supabase = createClient();
+                await supabase.auth.signOut();
+                router.push("/");
+                router.refresh();
+              }}
               className="flex items-center gap-4 px-4 py-3.5 w-full rounded-xl transition-colors font-medium text-sm text-red-600 hover:bg-red-50"
             >
               <LogOut className="w-5 h-5 text-red-500" />

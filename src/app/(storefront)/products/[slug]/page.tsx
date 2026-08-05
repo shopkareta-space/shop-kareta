@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { products } from "@/data/products";
+import { getProductBySlug } from "@/lib/services/product.service";
 import { ProductGallery } from "@/components/storefront/ProductGallery";
 import { PurchaseActions } from "@/components/storefront/PurchaseActions";
 import { TrustBadges } from "@/components/storefront/TrustBadges";
@@ -21,7 +21,7 @@ export async function generateMetadata(
   { params }: ProductPageProps
 ): Promise<Metadata> {
   const { slug } = await params;
-  const product = products.find((p) => p.id === slug);
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     return {
@@ -43,7 +43,7 @@ export async function generateMetadata(
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = products.find((p) => p.id === slug);
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     notFound();

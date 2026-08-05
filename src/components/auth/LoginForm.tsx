@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth";
 import { useAuthStore } from "@/store/authStore";
+import { createClient } from "@/lib/supabase/client";
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +20,7 @@ export function LoginForm() {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -30,18 +32,23 @@ export function LoginForm() {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const supabase = createClient();
     
-    // Mock successful login
-    login({
-      id: "usr_123",
+    const { error } = await supabase.auth.signInWithPassword({
       email: data.email,
-      fullName: "Demo User",
-      avatarUrl: "https://i.pravatar.cc/150?u=demo",
+      password: data.password,
     });
+
+    if (error) {
+      if (error.message.includes("Invalid login credentials")) {
+        return setError("root", { type: "manual", message: "Invalid email or password." });
+      }
+      return setError("root", { type: "manual", message: error.message });
+    }
     
+    // Successful login, onAuthStateChange in SessionProvider will handle Zustand state
     router.push(returnUrl);
+    router.refresh(); // Ensure layout re-evaluates session
   };
 
   return (
@@ -98,6 +105,12 @@ export function LoginForm() {
           Forgot Password?
         </Link>
       </div>
+
+      {errors.root && (
+        <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm font-medium text-center">
+          {errors.root.message}
+        </div>
+      )}
 
       <button
         type="submit"

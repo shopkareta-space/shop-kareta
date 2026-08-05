@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Minus, AlertTriangle, ShieldCheck } from "lucide-react";
 import { premiumSpring, fluidLayout, staggerContainer, fadeUp } from "@/lib/motion";
-import type { Product } from "@/data/products";
+import type { Product } from "@/types/product";
 
 interface ProductTabsProps {
   product: Product;

@@ -2,19 +2,39 @@
 
 import { useState } from "react";
 import ProductCard from "./ProductCard";
-import { Product } from "@/data/products";
+import { Product } from "@/types/product";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { staggerContainer } from "@/lib/motion";
 
 interface ProductGridProps {
   products: Product[];
+  hasActiveCategoryFilter?: boolean;
 }
 
-export function ProductGrid({ products }: ProductGridProps) {
+export function ProductGrid({ products, hasActiveCategoryFilter = false }: ProductGridProps) {
   const [visibleCount, setVisibleCount] = useState(9);
 
   if (products.length === 0) {
+    if (hasActiveCategoryFilter) {
+      return (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="flex flex-col items-center justify-center py-24 text-center border border-dashed border-brand-green/20 rounded-2xl bg-brand-green/5"
+        >
+          <div className="w-16 h-16 bg-brand-green/10 rounded-full flex items-center justify-center mb-4">
+            <span className="text-2xl">🌱</span>
+          </div>
+          <h3 className="font-heading font-semibold text-xl text-brand-green mb-2">Products coming soon</h3>
+          <p className="text-brand-gray max-w-md">
+            We're working hard to bring you the best products for this category. Please check back later!
+          </p>
+        </motion.div>
+      );
+    }
+    
     return (
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}

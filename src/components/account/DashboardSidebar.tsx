@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, ShoppingBag, Heart, MapPin, User, Settings, LogOut } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { motion } from "framer-motion";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 const navItems = [
   { href: "/account", label: "Dashboard", icon: LayoutDashboard },
@@ -17,7 +19,8 @@ const navItems = [
 
 export function DashboardSidebar() {
   const pathname = usePathname();
-  const { logout, user } = useAuthStore();
+  const { user } = useAuthStore();
+  const router = useRouter();
 
   return (
     <div className="w-full h-full bg-white rounded-3xl border border-brand-gray/10 p-6 shadow-sm sticky top-28 hidden lg:block">
@@ -55,7 +58,12 @@ export function DashboardSidebar() {
 
       <div className="mt-8 pt-8 border-t border-brand-gray/10">
         <button
-          onClick={logout}
+          onClick={async () => {
+            const supabase = createClient();
+            await supabase.auth.signOut();
+            router.push("/");
+            router.refresh();
+          }}
           className="flex items-center gap-3 px-4 py-3 w-full rounded-xl transition-colors font-medium text-sm text-brand-gray hover:text-red-600 hover:bg-red-50 group"
         >
           <LogOut className="w-5 h-5 text-brand-gray/70 group-hover:text-red-500 transition-transform group-hover:-translate-x-1" />

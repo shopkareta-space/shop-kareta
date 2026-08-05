@@ -1,11 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { products, type Product } from "@/data/products";
+import { type Product } from "@/types/product";
 
 interface WishlistState {
   items: Product[];
   isLoading: boolean;
-  addToWishlist: (productId: string) => void;
+  addToWishlist: (product: Product) => void;
   removeFromWishlist: (productId: string) => void;
   isInWishlist: (productId: string) => boolean;
 }
@@ -13,13 +13,11 @@ interface WishlistState {
 export const useWishlistStore = create<WishlistState>()(
   persist(
     (set, get) => ({
-      // Initialize with some mock data from our catalog
-      items: [products[0], products[2]],
+      items: [],
       isLoading: false,
 
-      addToWishlist: (productId: string) => {
-        const product = products.find((p) => p.id === productId);
-        if (product && !get().items.some((p) => p.id === productId)) {
+      addToWishlist: (product: Product) => {
+        if (!get().items.some((p) => p.id === product.id)) {
           set((state) => ({ items: [...state.items, product] }));
         }
       },

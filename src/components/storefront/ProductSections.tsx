@@ -1,6 +1,6 @@
 "use client";
 
-import type { Product } from "@/data/products";
+import type { Product } from "@/types/product";
 import { ProductDescription } from "./ProductDescription";
 import { BenefitsSection } from "./BenefitsSection";
 import { IngredientsSection } from "./IngredientsSection";

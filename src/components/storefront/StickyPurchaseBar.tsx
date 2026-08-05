@@ -6,7 +6,7 @@ import { Zap, ShoppingBag } from "lucide-react";
 import { premiumSpring, slideUp } from "@/lib/motion";
 import { useCartStore } from "@/store/cartStore";
 import { useRouter } from "next/navigation";
-import type { Product } from "@/data/products";
+import type { Product } from "@/types/product";
 
 export function StickyPurchaseBar({ product }: { product: Product }) {
   const [isVisible, setIsVisible] = useState(false);

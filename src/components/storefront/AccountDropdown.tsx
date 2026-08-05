@@ -5,11 +5,14 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, LogOut, FileText, Heart, MapPin, Settings } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 export function AccountDropdown() {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -73,9 +76,12 @@ export function AccountDropdown() {
 
             <div className="px-2 mt-1 border-t border-brand-gray/5 pt-1">
               <button
-                onClick={() => {
-                  logout();
+                onClick={async () => {
+                  const supabase = createClient();
+                  await supabase.auth.signOut();
                   setIsOpen(false);
+                  router.push("/");
+                  router.refresh();
                 }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-50 text-sm font-medium text-brand-gray hover:text-red-600 transition-colors"
               >
