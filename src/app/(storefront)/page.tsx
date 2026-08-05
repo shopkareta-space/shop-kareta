@@ -154,8 +154,13 @@ export default async function Homepage() {
             {/* Brand: Vedique Nutrition */}
             <BlurFade delay={0.1}>
               <div className="group bg-white rounded-3xl p-8 border border-brand-gray/10 hover:border-[#0D1B2A]/20 transition-all hover:shadow-xl hover:-translate-y-2 h-full flex flex-col items-center text-center">
-                <div className="w-24 h-24 rounded-2xl bg-[#0D1B2A] text-white flex items-center justify-center mb-6 transform group-hover:rotate-6 transition-transform">
-                  <span className="font-heading text-3xl font-bold">VN</span>
+                <div className="w-48 h-24 relative mb-6 transform group-hover:scale-105 transition-transform duration-300">
+                  <Image 
+                    src="/images/brands/vedique.png"
+                    alt="Vedique Nutrition"
+                    fill
+                    className="object-contain"
+                  />
                 </div>
                 <h3 className="font-heading text-2xl font-bold text-[#0D1B2A] mb-3">Vedique Nutrition</h3>
                 <p className="text-brand-gray leading-relaxed mb-6 flex-1">
@@ -172,8 +177,13 @@ export default async function Homepage() {
               <div className="group bg-[#0D1B2A] rounded-3xl p-8 border border-[#0D1B2A] transition-all hover:shadow-xl hover:shadow-brand-green/20 hover:-translate-y-2 h-full flex flex-col items-center text-center relative overflow-hidden">
                 <div className="absolute inset-0 bg-brand-green/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="relative z-10">
-                  <div className="w-24 h-24 rounded-2xl bg-brand-green text-white flex items-center justify-center mb-6 mx-auto transform group-hover:-rotate-6 transition-transform">
-                    <span className="font-heading text-3xl font-bold">SW</span>
+                  <div className="w-48 h-24 relative mb-6 mx-auto transform group-hover:scale-105 transition-transform duration-300">
+                    <Image 
+                      src="/images/brands/satvam.webp"
+                      alt="Satvam Wellness"
+                      fill
+                      className="object-contain"
+                    />
                   </div>
                   <h3 className="font-heading text-2xl font-bold text-white mb-3">Satvam Wellness</h3>
                   <p className="text-white/70 leading-relaxed mb-6 flex-1">
@@ -189,8 +199,13 @@ export default async function Homepage() {
             {/* Brand: La'Skovia */}
             <BlurFade delay={0.3}>
               <div className="group bg-white rounded-3xl p-8 border border-brand-gray/10 hover:border-brand-gold/30 transition-all hover:shadow-xl hover:-translate-y-2 h-full flex flex-col items-center text-center">
-                <div className="w-24 h-24 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-6 transform group-hover:scale-110 transition-transform border border-brand-gold/20">
-                  <span className="font-heading text-3xl font-bold italic">L'S</span>
+                <div className="w-48 h-24 relative mb-6 transform group-hover:scale-105 transition-transform duration-300">
+                  <Image 
+                    src="/images/brands/laskovia.png"
+                    alt="La'Skovia"
+                    fill
+                    className="object-contain"
+                  />
                 </div>
                 <h3 className="font-heading text-2xl font-bold text-[#0D1B2A] mb-3">La'Skovia</h3>
                 <p className="text-brand-gray leading-relaxed mb-6 flex-1">
