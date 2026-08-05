@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 export async function getAdminNotifications() {
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("admin_notifications")
+    .from("notifications")
     .select("*")
     .order("created_at", { ascending: false })
     .limit(50);
@@ -21,7 +21,7 @@ export async function getAdminNotifications() {
 export async function markNotificationAsRead(id: string) {
   const supabase = await createClient();
   const { error } = await supabase
-    .from("admin_notifications")
+    .from("notifications")
     .update({ is_read: true })
     .eq("id", id);
 
@@ -34,7 +34,7 @@ export async function markNotificationAsRead(id: string) {
 export async function markAllNotificationsAsRead() {
   const supabase = await createClient();
   const { error } = await supabase
-    .from("admin_notifications")
+    .from("notifications")
     .update({ is_read: true })
     .eq("is_read", false);
 
