@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Poppins, Geist } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import { LenisProvider } from "@/components/providers/LenisProvider";
 import { SessionProvider } from "@/components/auth/SessionProvider";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
@@ -30,9 +29,7 @@ export default function RootLayout({
     >
       <body className="min-h-full font-sans bg-background text-foreground">
         <SessionProvider>
-          <LenisProvider>
             {children}
-          </LenisProvider>
         </SessionProvider>
       </body>
     </html>
