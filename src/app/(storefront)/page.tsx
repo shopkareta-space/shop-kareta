@@ -156,7 +156,7 @@ export default async function Homepage() {
               <div className="group bg-white rounded-3xl p-8 border border-brand-gray/10 hover:border-[#0D1B2A]/20 transition-all hover:shadow-xl hover:-translate-y-2 h-full flex flex-col items-center text-center">
                 <div className="w-48 h-24 relative mb-6 transform group-hover:scale-105 transition-transform duration-300">
                   <Image 
-                    src="/images/brands/vedique.png"
+                    src="/images/brands/vedique.jpg"
                     alt="Vedique Nutrition"
                     fill
                     className="object-contain"
@@ -179,7 +179,7 @@ export default async function Homepage() {
                 <div className="relative z-10">
                   <div className="w-48 h-24 relative mb-6 mx-auto transform group-hover:scale-105 transition-transform duration-300">
                     <Image 
-                      src="/images/brands/satvam.webp"
+                      src="/images/brands/satvam.jpg"
                       alt="Satvam Wellness"
                       fill
                       className="object-contain"
@@ -201,7 +201,7 @@ export default async function Homepage() {
               <div className="group bg-white rounded-3xl p-8 border border-brand-gray/10 hover:border-brand-gold/30 transition-all hover:shadow-xl hover:-translate-y-2 h-full flex flex-col items-center text-center">
                 <div className="w-48 h-24 relative mb-6 transform group-hover:scale-105 transition-transform duration-300">
                   <Image 
-                    src="/images/brands/laskovia.png"
+                    src="/images/brands/laskovia.jpg"
                     alt="La'Skovia"
                     fill
                     className="object-contain"
