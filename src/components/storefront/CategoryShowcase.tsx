@@ -11,6 +11,14 @@ const getCategoryIcon = (slug: string) => {
   return Tag;
 };
 
+// Image mapping fallback
+const getCategoryBanner = (slug: string) => {
+  if (slug === 'cosmetics') return '/images/categories/cosmetics.png';
+  if (slug === 'health-and-wellness') return '/images/categories/health-and-wellness.png';
+  if (slug === 'ortho-care') return '/images/categories/ortho-care.png';
+  return null;
+};
+
 // Colors mapping
 const getCategoryColors = (index: number) => {
   const colors = [
@@ -76,18 +84,18 @@ export async function CategoryShowcase({ featuredOnly = false, searchQuery }: Ca
             href={`/shop?category=${category.slug}`} 
             className="group relative h-96 rounded-3xl overflow-hidden bg-brand-light flex flex-col justify-end p-8 transition-all duration-500"
           >
-            {category.image_url || category.banner_url ? (
+            {category.image_url || category.banner_url || getCategoryBanner(category.slug) ? (
               <Image 
-                src={category.image_url || category.banner_url} 
+                src={category.image_url || category.banner_url || getCategoryBanner(category.slug)!} 
                 alt={category.name} 
                 fill 
-                className="object-cover absolute inset-0 z-0" 
+                className="object-cover absolute inset-0 z-0 group-hover:scale-105 transition-transform duration-700" 
               />
             ) : null}
             
-            <div className={`absolute inset-0 ${colors.bgOverlay} ${colors.bgHover} transition-colors z-10`} />
+            <div className={`absolute inset-0 ${colors.bgOverlay} ${colors.bgHover} transition-colors duration-500 z-10`} />
             
-            {!(category.image_url || category.banner_url) && (
+            {!(category.image_url || category.banner_url || getCategoryBanner(category.slug)) && (
               <div className={`absolute inset-0 flex items-center justify-center ${colors.textIcon} z-0 ${colors.bgIcon}`}>
                 <Icon className="w-32 h-32 opacity-20" />
               </div>
