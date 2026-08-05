@@ -5,16 +5,15 @@ import { OrderConfirmationEmail } from "@/components/emails/OrderConfirmationEma
 import React from "react";
 
 // Initialize Resend
-// In a real production app, ensure RESEND_API_KEY is in your environment variables
 const resend = new Resend(process.env.RESEND_API_KEY || 'mock_key');
-
-// Initialize Supabase admin client to bypass RLS for server-side order insertion
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; // Must use service role key to insert without active session
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(req: Request) {
   try {
+    // Initialize Supabase admin client here to avoid build-time environment variable errors
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''; 
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
     const body = await req.json();
     const { contact, shippingAddress, deliveryMethod, paymentMethod, items, totalAmount, userId } = body;
 

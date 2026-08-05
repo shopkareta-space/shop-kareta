@@ -77,7 +77,7 @@ export async function updateMediaAsset(id: string, payload: any) {
 
 export async function getAssetUsage(url: string) {
   const supabase = await createClient();
-  let usage = [];
+  let usage: any[] = [];
 
   // Check product images
   const { data: productImages } = await supabase

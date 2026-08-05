@@ -16,7 +16,7 @@ interface OrderReviewProps {
 export function OrderReview({ onBack, onEditStep, onPlaceOrder }: OrderReviewProps) {
   const { contact, shippingAddress, deliveryMethod, paymentMethod } = useCheckoutStore();
   const cartItems = useCartStore((state) => state.items);
-  const cartTotal = useCartStore((state) => state.getTotal());
+  const cartTotal = cartItems.reduce((total, item) => total + item.product.price * item.quantity, 0);
   const [isPlacing, setIsPlacing] = useState(false);
 
   const handlePlaceOrder = async () => {
@@ -31,11 +31,11 @@ export function OrderReview({ onBack, onEditStep, onPlaceOrder }: OrderReviewPro
           deliveryMethod,
           paymentMethod,
           items: cartItems.map(item => ({
-            productId: item.productId,
-            name: item.name,
+            productId: item.product.id,
+            name: item.product.name,
             quantity: item.quantity,
-            price: item.price,
-            image: item.image
+            price: item.product.price,
+            image: item.product.images?.[0] || ""
           })),
           totalAmount: cartTotal
         })
