@@ -117,10 +117,10 @@ function prepareProductPayload(productData: any) {
     product_type: productData.product_type || "single",
     short_introduction: productData.short_introduction || null,
     description: productData.description || "",
-    price: productData.price,
-    original_price: productData.original_price || null,
+    price: productData.price ? Number(productData.price) : 0,
+    original_price: productData.original_price ? Number(productData.original_price) : null,
     sku: productData.sku || null,
-    inventory_count: productData.inventory_count || 0,
+    inventory_count: productData.inventory_count ? Number(productData.inventory_count) : 0,
     is_active: productData.is_active,
     is_featured: productData.is_featured || false,
     brand_id: productData.brand_id || null,
@@ -135,10 +135,10 @@ function prepareProductPayload(productData: any) {
     ingredients: productData.ingredients || null,
     storage: productData.storage || null,
     suitable_for: productData.suitable_for || [],
-    discount: productData.discount || null,
-    gst: productData.gst || null,
-    low_stock_alert: productData.low_stock_alert || 10,
-    weight: productData.weight || null,
+    discount: productData.discount ? Number(productData.discount) : null,
+    gst: productData.gst ? Number(productData.gst) : null,
+    low_stock_alert: productData.low_stock_alert ? Number(productData.low_stock_alert) : 10,
+    weight: productData.weight ? Number(productData.weight) : null,
     dimensions: productData.dimensions || null,
     product_video_url: productData.product_video_url || null,
     how_to_use: productData.how_to_use || null,
@@ -171,7 +171,7 @@ export async function createAdminProduct(productData: any, images: any[], varian
 
   if (error) {
     console.error("Error creating product:", error);
-    throw new Error(error.message);
+    return { error: error.message };
   }
 
   if (images && images.length > 0) {
@@ -202,7 +202,7 @@ export async function updateAdminProduct(id: string, productData: any, images: a
 
   if (error) {
     console.error("Error updating product:", error);
-    throw new Error(error.message);
+    return { error: error.message };
   }
 
   if (images) {

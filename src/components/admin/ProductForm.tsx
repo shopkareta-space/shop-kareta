@@ -124,13 +124,19 @@ export function ProductForm({ initialData = null, isEdit = false }: { initialDat
         suitable_for: formData.suitable_for.split("\n").filter(Boolean),
       };
 
+      let result;
       if (isEdit && initialData?.id) {
-        await updateAdminProduct(initialData.id, payload, images, [], []);
-        alert("Product updated successfully!");
+        result = await updateAdminProduct(initialData.id, payload, images, [], []);
+        if (!result?.error) alert("Product updated successfully!");
       } else {
-        await createAdminProduct(payload, images, [], []);
-        alert("Product created successfully!");
+        result = await createAdminProduct(payload, images, [], []);
+        if (!result?.error) alert("Product created successfully!");
       }
+      
+      if (result?.error) {
+        throw new Error(result.error);
+      }
+      
       router.push("/admin/products");
       router.refresh();
     } catch (error: any) {
