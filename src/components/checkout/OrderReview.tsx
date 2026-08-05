@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useCheckoutStore } from "@/store/checkoutStore";
+import { useCartStore } from "@/store/cartStore";
 import { fadeUp, premiumSpring } from "@/lib/motion";
 import { useState } from "react";
 
@@ -14,14 +15,44 @@ interface OrderReviewProps {
 
 export function OrderReview({ onBack, onEditStep, onPlaceOrder }: OrderReviewProps) {
   const { contact, shippingAddress, deliveryMethod, paymentMethod } = useCheckoutStore();
+  const cartItems = useCartStore((state) => state.items);
+  const cartTotal = useCartStore((state) => state.getTotal());
   const [isPlacing, setIsPlacing] = useState(false);
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     setIsPlacing(true);
-    // Simulate network delay for placing order
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contact,
+          shippingAddress,
+          deliveryMethod,
+          paymentMethod,
+          items: cartItems.map(item => ({
+            productId: item.productId,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            image: item.image
+          })),
+          totalAmount: cartTotal
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to place order");
+
+      // Save delivery ID in session storage to show on success page
+      sessionStorage.setItem("latestDeliveryId", data.deliveryId);
+      
       onPlaceOrder();
-    }, 1500);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to place order. Please try again.");
+      setIsPlacing(false);
+    }
   };
 
   if (!contact || !shippingAddress || !paymentMethod) return null;

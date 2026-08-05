@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { useCheckoutStore, AddressInfo } from "@/store/checkoutStore";
 import { fadeUp, premiumSpring } from "@/lib/motion";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const addressSchema = z.object({
   addressLine1: z.string().min(5, "Address must be at least 5 characters"),
@@ -30,6 +30,8 @@ export function AddressForm({ onNext, onBack }: AddressFormProps) {
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
     reset
   } = useForm<AddressInfo>({
@@ -44,6 +46,9 @@ export function AddressForm({ onNext, onBack }: AddressFormProps) {
     }
   });
 
+  const pincode = watch("pincode");
+  const [isFetchingPincode, setIsFetchingPincode] = useState(false);
+
   useEffect(() => {
     if (storedAddress) {
       reset(storedAddress);
@@ -54,6 +59,30 @@ export function AddressForm({ onNext, onBack }: AddressFormProps) {
     setShippingAddress(data);
     onNext();
   };
+
+  useEffect(() => {
+    async function fetchPincodeDetails() {
+      if (pincode?.length === 6) {
+        setIsFetchingPincode(true);
+        try {
+          const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+          const data = await res.json();
+          if (data && data[0]?.Status === "Success") {
+            const postOffice = data[0].PostOffice[0];
+            // Automatically fill the city (District) and state
+            setValue("city", postOffice.District, { shouldValidate: true });
+            setValue("state", postOffice.State, { shouldValidate: true });
+          }
+        } catch (error) {
+          console.error("Failed to fetch pincode details:", error);
+        } finally {
+          setIsFetchingPincode(false);
+        }
+      }
+    }
+    
+    fetchPincodeDetails();
+  }, [pincode, setValue]);
 
   return (
     <motion.div variants={fadeUp} initial="initial" animate="animate" exit="exit">
@@ -96,16 +125,20 @@ export function AddressForm({ onNext, onBack }: AddressFormProps) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 relative">
             <label htmlFor="pincode" className="text-xs font-semibold text-brand-blue uppercase tracking-wider">PIN Code*</label>
             <input
               id="pincode"
               {...register("pincode")}
               maxLength={6}
               className={`w-full bg-white border ${errors.pincode ? 'border-red-500' : 'border-brand-gray/20'} rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-green/50 focus:border-brand-green transition-colors`}
-              placeholder="110001"
-              autoComplete="postal-code"
+              placeholder="e.g. 110001"
             />
+            {isFetchingPincode && (
+              <div className="absolute right-3 top-[34px]">
+                <div className="w-4 h-4 border-2 border-brand-green/30 border-t-brand-green rounded-full animate-spin" />
+              </div>
+            )}
             {errors.pincode && <span className="text-xs text-red-500">{errors.pincode.message}</span>}
           </div>
           

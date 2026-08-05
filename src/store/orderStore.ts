@@ -27,51 +27,64 @@ interface OrderState {
   fetchOrders: () => void;
 }
 
-// Mock Data
-const MOCK_ORDERS: Order[] = [
-  {
-    id: "ORD-98234",
-    date: "2026-07-20T10:30:00Z",
-    total: 3250.00,
-    status: "delivered",
-    paymentStatus: "paid",
-    items: [
-      {
-        id: "item_1",
-        productId: "cellogen-anti-aging",
-        name: "Cellogen Anti-Aging Cream",
-        quantity: 1,
-        price: 1850.00,
-        image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=800",
-      }
-    ]
-  },
-  {
-    id: "ORD-98210",
-    date: "2026-07-15T14:45:00Z",
-    total: 1450.00,
-    status: "processing",
-    paymentStatus: "paid",
-    items: [
-      {
-        id: "item_2",
-        productId: "ayurvedic-glow-serum",
-        name: "Ayurvedic Glow Serum",
-        quantity: 1,
-        price: 1450.00,
-        image: "https://images.unsplash.com/photo-1608248593802-861c8a6fdf9e?auto=format&fit=crop&q=80&w=800",
-      }
-    ]
-  }
-];
-
 export const useOrderStore = create<OrderState>((set) => ({
-  orders: MOCK_ORDERS,
+  orders: [],
   isLoading: false,
-  fetchOrders: () => {
+  fetchOrders: async () => {
     set({ isLoading: true });
-    setTimeout(() => {
-      set({ orders: MOCK_ORDERS, isLoading: false });
-    }, 800);
+    try {
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        set({ orders: [], isLoading: false });
+        return;
+      }
+
+      // Fetch orders and their items
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          id,
+          created_at,
+          total_amount,
+          status,
+          payment_status,
+          order_items (
+            id,
+            product_id,
+            product_name,
+            quantity,
+            price,
+            image
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const mappedOrders: Order[] = data.map((d: any) => ({
+        id: `SK-${d.id.substring(0, 8).toUpperCase()}`, // Using the short Delivery ID format
+        date: d.created_at,
+        total: Number(d.total_amount),
+        status: d.status,
+        paymentStatus: d.payment_status,
+        items: d.order_items.map((i: any) => ({
+          id: i.id,
+          productId: i.product_id,
+          name: i.product_name,
+          quantity: i.quantity,
+          price: Number(i.price),
+          image: i.image || "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=800"
+        }))
+      }));
+
+      set({ orders: mappedOrders, isLoading: false });
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+      set({ isLoading: false });
+    }
   }
 }));

@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Bell, Menu, Search, User } from "lucide-react";
+import { Menu, Search, User } from "lucide-react";
+import { NotificationBell } from "./NotificationBell";
 
 export function Header() {
   const pathname = usePathname();
@@ -42,10 +43,7 @@ export function Header() {
           />
         </div>
 
-        <button className="p-2 text-gray-400 hover:text-gray-500 relative">
-          <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white" />
-          <Bell className="h-6 w-6" />
-        </button>
+        <NotificationBell />
 
         <div className="h-8 w-8 rounded-full bg-[#0D1B2A] text-white flex items-center justify-center font-bold shadow-sm">
           A

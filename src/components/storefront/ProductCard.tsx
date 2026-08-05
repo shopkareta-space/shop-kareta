@@ -40,7 +40,7 @@ export default function ProductCard({
       className="group flex flex-col bg-white rounded-2xl border border-brand-gray/10 overflow-hidden"
     >
       {/* Image Container */}
-      <Link href={`/products/${id}`} className="relative aspect-[4/5] bg-[#F6F3EC] overflow-hidden block">
+      <Link href={`/products/${id}`} className="relative w-full bg-[#F6F3EC] overflow-hidden block" style={{ aspectRatio: '16/9' }}>
         {primaryImage ? (
           <Image 
             src={primaryImage} 

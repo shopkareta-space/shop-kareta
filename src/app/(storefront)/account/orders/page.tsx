@@ -6,8 +6,14 @@ import { EmptyState } from "@/components/account/EmptyState";
 import { ShoppingBag } from "lucide-react";
 import BlurFade from "@/components/ui/blur-fade";
 
+import { useEffect } from "react";
+
 export default function OrdersPage() {
-  const { orders } = useOrderStore();
+  const { orders, isLoading, fetchOrders } = useOrderStore();
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   return (
     <div className="space-y-8">
@@ -23,7 +29,11 @@ export default function OrdersPage() {
       </BlurFade>
 
       <BlurFade delay={0.2}>
-        {orders.length > 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-10">
+            <div className="w-8 h-8 border-4 border-brand-green/30 border-t-brand-green rounded-full animate-spin" />
+          </div>
+        ) : orders.length > 0 ? (
           <div className="space-y-4">
             {orders.map((order) => (
               <OrderCard key={order.id} order={order} />

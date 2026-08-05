@@ -41,7 +41,7 @@ export const useCheckoutStore = create<CheckoutState>()(
       contact: null,
       shippingAddress: null,
       deliveryMethod: "standard",
-      paymentMethod: null,
+      paymentMethod: "cod",
 
       setContact: (contact) => set({ contact }),
       setShippingAddress: (shippingAddress) => set({ shippingAddress }),

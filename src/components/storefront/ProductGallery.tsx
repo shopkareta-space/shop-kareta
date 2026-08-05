@@ -89,7 +89,8 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
     <div className="flex flex-col gap-4 select-none">
       {/* Main Featured Image Container */}
       <div 
-        className="relative aspect-square sm:aspect-[4/5] bg-brand-light rounded-2xl overflow-hidden group cursor-crosshair border border-brand-gray/10"
+        className="relative w-full bg-brand-light rounded-2xl overflow-hidden group cursor-crosshair border border-brand-gray/10"
+        style={{ aspectRatio: '16/9' }}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => {
           setIsHovering(false);
@@ -114,7 +115,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
           >
             {/* We don't have actual images yet, so we build a premium placeholder that supports zoom */}
             <div 
-              className="w-full h-full flex items-center justify-center transition-transform duration-200 ease-out"
+              className="relative w-full h-full flex items-center justify-center transition-transform duration-200 ease-out"
               style={{
                 transform: isHovering ? `scale(1.5)` : "scale(1)",
                 transformOrigin: `${mousePos.x}% ${mousePos.y}%`

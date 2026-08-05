@@ -15,9 +15,9 @@ export function PaymentSelector({ onNext, onBack }: PaymentSelectorProps) {
   const setPaymentMethod = useCheckoutStore((state) => state.setPaymentMethod);
 
   const methods = [
-    { id: "upi" as PaymentMethod, name: "UPI", icon: Smartphone, desc: "Google Pay, PhonePe, Paytm" },
-    { id: "card" as PaymentMethod, name: "Credit / Debit Card", icon: CreditCard, desc: "Visa, MasterCard, RuPay" },
-    { id: "cod" as PaymentMethod, name: "Cash on Delivery", icon: Banknote, desc: "Pay via cash when order arrives" }
+    { id: "upi" as PaymentMethod, name: "UPI", icon: Smartphone, desc: "Google Pay, PhonePe, Paytm", comingSoon: true },
+    { id: "card" as PaymentMethod, name: "Credit / Debit Card", icon: CreditCard, desc: "Visa, MasterCard, RuPay", comingSoon: true },
+    { id: "cod" as PaymentMethod, name: "Cash on Delivery", icon: Banknote, desc: "Pay via cash when order arrives", comingSoon: false }
   ];
 
   const handleNext = () => {
@@ -42,8 +42,10 @@ export function PaymentSelector({ onNext, onBack }: PaymentSelectorProps) {
           return (
             <div
               key={method.id}
-              onClick={() => setPaymentMethod(method.id)}
-              className={`relative p-5 rounded-2xl border-2 cursor-pointer transition-all ${
+              onClick={() => {
+                if (!method.comingSoon) setPaymentMethod(method.id);
+              }}
+              className={`relative p-5 rounded-2xl border-2 transition-all ${method.comingSoon ? "opacity-60 cursor-not-allowed" : "cursor-pointer"} ${
                 isSelected 
                   ? "border-brand-blue bg-brand-blue/5" 
                   : "border-brand-gray/10 bg-white hover:border-brand-gray/30"
@@ -54,7 +56,12 @@ export function PaymentSelector({ onNext, onBack }: PaymentSelectorProps) {
                   <Icon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-brand-blue">{method.name}</h3>
+                  <div className="flex items-center gap-3">
+                    <h3 className="font-bold text-brand-blue">{method.name}</h3>
+                    {method.comingSoon && (
+                      <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-amber-100 text-amber-700">Coming Soon</span>
+                    )}
+                  </div>
                   <p className="text-xs text-brand-gray mt-0.5">{method.desc}</p>
                 </div>
               </div>

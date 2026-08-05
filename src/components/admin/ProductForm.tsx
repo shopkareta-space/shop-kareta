@@ -114,9 +114,12 @@ export function ProductForm({ initialData = null, isEdit = false }: { initialDat
     e.preventDefault();
     setLoading(true);
     try {
+      const finalSlug = formData.slug.trim() || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      
       // Parse multi-line strings into arrays for Supabase text[] columns
       const payload = {
         ...formData,
+        slug: finalSlug,
         benefits: formData.benefits.split("\n").filter(Boolean),
         suitable_for: formData.suitable_for.split("\n").filter(Boolean),
       };

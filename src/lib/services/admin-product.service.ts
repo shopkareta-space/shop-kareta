@@ -19,6 +19,7 @@ export async function getAdminProducts() {
       categories(name),
       product_images(url)
     `)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -234,11 +235,21 @@ export async function updateAdminProduct(id: string, productData: any, images: a
 
 export async function deleteAdminProduct(id: string) {
   const supabase = await createClient();
-  const { error } = await supabase.from("products").delete().eq("id", id);
+  
+  // Soft delete the product by setting deleted_at to current timestamp
+  const { error } = await supabase
+    .from("products")
+    .update({ 
+      deleted_at: new Date().toISOString(),
+      is_active: false // Also deactivate it
+    })
+    .eq("id", id);
+    
   if (error) {
     console.error("Error deleting product:", error);
     throw new Error(error.message);
   }
+  
   revalidatePath("/admin/products");
   revalidatePath("/shop");
 }

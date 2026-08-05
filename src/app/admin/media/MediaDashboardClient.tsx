@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import { Search, Filter, UploadCloud, Copy, Edit2, Trash2, Download, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Search, Filter, UploadCloud, Copy, Edit2, Trash2, Download, Image as ImageIcon, Loader2, X } from "lucide-react";
 import { deleteMediaAsset, updateMediaAsset, recordMediaAsset } from "@/lib/services/admin-media.service";
 import { createBrowserClient } from "@supabase/ssr";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -49,8 +49,7 @@ export default function MediaDashboardClient({ initialAssets }: { initialAssets:
     try {
       setIsUploading(true);
       if (!e.target.files || e.target.files.length === 0) return;
-
-      const newUploadedAssets = [];
+      const newUploadedAssets: any[] = [];
       
       for (let i = 0; i < e.target.files.length; i++) {
         const file = e.target.files[i];
