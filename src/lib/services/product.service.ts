@@ -35,6 +35,7 @@ export async function getFeaturedProducts(limit: number = 4): Promise<Product[]>
       product_images ( url, is_primary )
     `)
     .eq('is_active', true)
+    .eq('is_featured', true)
     .order('created_at', { ascending: false })
     .limit(limit);
 
