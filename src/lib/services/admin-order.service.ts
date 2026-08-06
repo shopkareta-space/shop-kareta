@@ -2,6 +2,11 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { Resend } from "resend";
+import React from "react";
+import { OrderConfirmationEmail } from "@/components/emails/OrderConfirmationEmail";
+
+const resend = new Resend(process.env.RESEND_API_KEY || 'mock_key');
 
 export async function getAdminOrders(filters?: { status?: string, payment_status?: string, search?: string }) {
   const supabase = await createClient();
@@ -141,6 +146,70 @@ export async function updateOrderStatus(id: string, newStatus: string, comment?:
     .eq("id", id);
     
   if (error) throw error;
+
+  // Restore inventory if admin cancels the order
+  if (newStatus === "cancelled") {
+    const { data: items } = await supabase
+      .from("order_items")
+      .select("product_id, quantity")
+      .eq("order_id", id);
+      
+    if (items && items.length > 0) {
+      for (const item of items) {
+        if (item.product_id) {
+          const { data: product } = await supabase
+            .from("products")
+            .select("inventory_count")
+            .eq("id", item.product_id)
+            .single();
+
+          if (product) {
+            const restoredInventory = (product.inventory_count || 0) + item.quantity;
+            await supabase
+              .from("products")
+              .update({ inventory_count: restoredInventory })
+              .eq("id", item.product_id);
+          }
+        }
+      }
+    }
+  }
+
+  // Send shipping notification email if shipped
+  if (newStatus === "shipped") {
+    const { data: fullOrder } = await supabase
+      .from("orders")
+      .select("*, order_items(*)")
+      .eq("id", id)
+      .single();
+      
+    if (fullOrder && fullOrder.contact_info?.email && process.env.RESEND_API_KEY) {
+      const deliveryId = `SK-${fullOrder.id.substring(0, 8).toUpperCase()}`;
+      try {
+        await resend.emails.send({
+          from: "Shopkareta <orders@shopkareta.com>",
+          to: [fullOrder.contact_info.email],
+          subject: `Your order #${deliveryId} has been shipped!`,
+          // We reuse OrderConfirmationEmail for now, passing shipped text in subject
+          react: React.createElement(OrderConfirmationEmail, {
+            customerName: fullOrder.contact_info.firstName,
+            orderId: fullOrder.id,
+            deliveryId,
+            totalAmount: fullOrder.total_amount,
+            shippingAddress: fullOrder.shipping_address,
+            items: fullOrder.order_items.map((i: any) => ({
+              name: i.product_name,
+              quantity: i.quantity,
+              price: i.price,
+              image: i.image
+            }))
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to send shipping email", err);
+      }
+    }
+  }
 
   // 3. Log history
   await supabase

@@ -61,6 +61,17 @@ export async function cancelOrder(orderId: string) {
     throw new Error("Order cannot be cancelled at this stage.");
   }
 
+  // Fetch the order items to restore inventory
+  const { data: items, error: itemsError } = await supabase
+    .from("order_items")
+    .select("product_id, quantity")
+    .eq("order_id", orderId);
+
+  if (itemsError) {
+    console.error("Fetch items error during cancellation:", itemsError);
+    throw new Error("Failed to process cancellation");
+  }
+
   // Update order status to cancelled
   const { error: updateError } = await supabase
     .from("orders")
@@ -70,6 +81,36 @@ export async function cancelOrder(orderId: string) {
   if (updateError) {
     console.error("Cancel order error:", updateError);
     throw new Error("Failed to cancel order");
+  }
+
+  // Log status history
+  await supabase.from("order_status_history").insert({
+    order_id: orderId,
+    previous_status: "processing",
+    new_status: "cancelled",
+    comment: "Cancelled by customer"
+  });
+
+  // Restore inventory
+  if (items && items.length > 0) {
+    for (const item of items) {
+      if (item.product_id) {
+        // Fetch current inventory
+        const { data: product } = await supabase
+          .from("products")
+          .select("inventory_count")
+          .eq("id", item.product_id)
+          .single();
+
+        if (product) {
+          const restoredInventory = (product.inventory_count || 0) + item.quantity;
+          await supabase
+            .from("products")
+            .update({ inventory_count: restoredInventory })
+            .eq("id", item.product_id);
+        }
+      }
+    }
   }
 
   return { success: true };

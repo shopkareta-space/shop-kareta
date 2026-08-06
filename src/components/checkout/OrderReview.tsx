@@ -48,6 +48,9 @@ export function OrderReview({ onBack, onEditStep, onPlaceOrder }: OrderReviewPro
       sessionStorage.setItem("latestDeliveryId", data.deliveryId);
       sessionStorage.setItem("latestOrderId", data.orderId);
       
+      // Clear the cart
+      useCartStore.getState().clearCart();
+
       onPlaceOrder();
     } catch (error) {
       console.error(error);

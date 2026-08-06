@@ -42,22 +42,24 @@ export async function POST(req: Request) {
       throw new Error("Failed to create order");
     }
 
-    // 2. Fetch product UUIDs based on the slugs (items.productId)
-    const slugs = items.map((item: any) => item.productId);
+    // 2. Fetch products to check inventory based on UUIDs (items.productId)
+    const productIds = items.map((item: any) => item.productId);
     const { data: productsData } = await supabase
       .from('products')
-      .select('id, slug')
-      .in('slug', slugs);
+      .select('id, inventory_count')
+      .in('id', productIds);
 
-    const productMap = new Map();
+    const productInventory = new Map();
     if (productsData) {
-      productsData.forEach((p: any) => productMap.set(p.slug, p.id));
+      productsData.forEach((p: any) => {
+        productInventory.set(p.id, p.inventory_count || 0);
+      });
     }
 
     // 3. Insert into order_items table
     const orderItemsToInsert = items.map((item: any) => ({
       order_id: order.id,
-      product_id: productMap.get(item.productId) || null,
+      product_id: item.productId,
       variant_id: item.variantId || null,
       product_name: item.name,
       quantity: item.quantity,
@@ -74,10 +76,34 @@ export async function POST(req: Request) {
       throw new Error("Failed to create order items");
     }
 
-    // 3. Generate Delivery ID
+    // 4. Log initial order status in history
+    await supabase.from("order_status_history").insert({
+      order_id: order.id,
+      previous_status: null,
+      new_status: "processing",
+      comment: "Order placed successfully"
+    });
+
+    // 5. Deduct inventory
+    if (productsData) {
+      for (const item of items) {
+        const productId = item.productId;
+        if (productId) {
+          const currentInventory = productInventory.get(productId) || 0;
+          const newInventory = Math.max(0, currentInventory - item.quantity);
+          
+          await supabase
+            .from("products")
+            .update({ inventory_count: newInventory })
+            .eq("id", productId);
+        }
+      }
+    }
+
+    // 6. Generate Delivery ID
     const deliveryId = `SK-${order.id.substring(0, 8).toUpperCase()}`;
 
-    // 4. Send Confirmation Email via Resend
+    // 7. Send Confirmation Email via Resend
     try {
       if (process.env.RESEND_API_KEY) {
         await resend.emails.send({
