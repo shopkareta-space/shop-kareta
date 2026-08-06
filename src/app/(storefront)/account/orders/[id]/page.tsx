@@ -136,8 +136,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                 </button>
               </Link>
             )}
-
-            <Link href={`/invoice/${order.id}`} className="flex-1 md:flex-none">
+            <Link href={`/account/orders/${order.id}/invoice`} className="flex-1 md:flex-none">
               <button className="w-full flex items-center justify-center gap-2 bg-brand-blue/5 hover:bg-brand-blue/10 text-brand-blue font-semibold py-2.5 px-6 rounded-xl transition-colors">
                 Download Invoice
               </button>

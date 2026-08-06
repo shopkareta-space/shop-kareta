@@ -2,8 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import InvoiceActions from "@/components/invoice/InvoiceActions";
 
-export default async function InvoicePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+interface InvoiceDocumentProps {
+  orderId: string;
+  viewContext: "admin" | "customer";
+}
+
+export default async function InvoiceDocument({ orderId, viewContext }: InvoiceDocumentProps) {
   const supabase = await createClient();
 
   // Get current user to verify access
@@ -13,14 +17,18 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
     redirect("/login");
   }
 
-  // Check if user is admin
-  const { data: adminProfile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  // If admin context, verify admin role
+  if (viewContext === "admin") {
+    const { data: adminProfile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
 
-  const isAdmin = adminProfile?.role === "admin";
+    if (adminProfile?.role !== "admin") {
+      return notFound();
+    }
+  }
 
   // Fetch the order
   const { data: order, error } = await supabase
@@ -29,15 +37,15 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
       *,
       order_items (*)
     `)
-    .eq("id", id)
+    .eq("id", orderId)
     .single();
 
   if (error || !order) {
     return notFound();
   }
 
-  // Security check: Only admin or the owner can view
-  if (!isAdmin && order.user_id !== user.id) {
+  // If customer context, verify ownership
+  if (viewContext === "customer" && order.user_id !== user.id) {
     return notFound(); // Return 404 to hide the existence of other orders
   }
 
@@ -68,7 +76,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
   const paymentStatus = order.payment_status ? order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1) : "Pending";
   const orderStatus = order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : "Pending";
 
-  const backUrl = isAdmin ? `/admin/orders/${order.id}` : `/account/orders/${order.id}`;
+  const backUrl = viewContext === "admin" ? `/admin/orders/${order.id}` : `/account/orders/${order.id}`;
 
   const subtotal = Number(order.total_amount || 0); // Assuming total_amount is subtotal for now since shipping/tax are 0
   const shipping = 0.00;
@@ -123,7 +131,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
               <p className="font-semibold text-gray-900">{customerName}</p>
               <p>{customerPhone}</p>
               <p>{customerEmail}</p>
-              <p className="whitespace-pre-wrap mt-2">{order.shipping_address || "N/A"}</p>
+              <p className="whitespace-pre-wrap mt-2">{order.shipping_address ? (typeof order.shipping_address === 'string' ? order.shipping_address : `${order.shipping_address.addressLine1 || ''} ${order.shipping_address.addressLine2 || ''}\n${order.shipping_address.city || ''}, ${order.shipping_address.state || ''} - ${order.shipping_address.pincode || ''}`) : "N/A"}</p>
             </div>
           </div>
 

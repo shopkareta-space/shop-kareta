@@ -215,7 +215,7 @@ export default function OrderDetailClient({ initialOrder }: { initialOrder: any 
           <button onClick={() => window.open(`?packing_slip=true`, '_blank')} className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
             <Package className="w-4 h-4 mr-2" /> Print Packing Slip
           </button>
-          <Link href={`/invoice/${order.id}`} target="_blank" className="inline-flex items-center px-4 py-2 bg-[#0D1B2A] border border-transparent text-white rounded-xl text-sm font-medium hover:bg-opacity-90 transition-colors">
+          <Link href={`/admin/orders/${order.id}/invoice`} target="_blank" className="inline-flex items-center px-4 py-2 bg-[#0D1B2A] border border-transparent text-white rounded-xl text-sm font-medium hover:bg-opacity-90 transition-colors">
             <Printer className="w-4 h-4 mr-2" /> Download Invoice PDF
           </Link>
         </div>
