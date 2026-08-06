@@ -4,11 +4,14 @@ import { ArrowRight, Leaf, ShieldCheck, Sparkles, Truck, CheckCircle, Star } fro
 import ProductCard from "@/components/storefront/ProductCard";
 import BlurFade from "@/components/ui/blur-fade";
 
-import { getFeaturedProducts } from "@/lib/services/product.service";
+import { getFeaturedProducts, getRandomProducts } from "@/lib/services/product.service";
 import { CategoryShowcase } from "@/components/storefront/CategoryShowcase";
+
+export const revalidate = 7200; // Revalidate every 2 hours (shuffles random products)
 
 export default async function Homepage() {
   const top4Products = await getFeaturedProducts(4);
+  const randomProducts = await getRandomProducts(4);
 
   return (
     <div className="flex flex-col bg-brand-light">
@@ -80,19 +83,25 @@ export default async function Homepage() {
         </div>
       </section>
 
-      {/* 1.5 Featured Categories */}
+      {/* 1.5 Shuffled Products (Discover) */}
       <section className="py-16 bg-white border-b border-brand-gray/10">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="text-brand-green font-semibold tracking-wider uppercase text-sm mb-2 block">Top Selections</span>
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-brand-blue mb-4">Featured Categories</h2>
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-brand-blue mb-4">Discover Our Products</h2>
           </div>
           
-          <CategoryShowcase featuredOnly={true} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {randomProducts.map((product, index) => (
+              <BlurFade key={product.id} delay={0.1 + index * 0.1}>
+                <ProductCard product={product} />
+              </BlurFade>
+            ))}
+          </div>
           
           <div className="mt-12 flex justify-center">
-            <Link href="/categories" className="inline-flex items-center justify-center bg-brand-light text-brand-blue px-8 py-4 rounded-xl font-semibold hover:bg-brand-gray/10 transition-colors border border-brand-gray/20">
-              View All Categories
+            <Link href="/shop" className="inline-flex items-center justify-center bg-brand-light text-brand-blue px-8 py-4 rounded-xl font-semibold hover:bg-brand-gray/10 transition-colors border border-brand-gray/20">
+              View All Products
             </Link>
           </div>
         </div>

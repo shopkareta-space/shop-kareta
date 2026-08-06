@@ -47,6 +47,35 @@ export async function getFeaturedProducts(limit: number = 4): Promise<Product[]>
   return products.map(mapDatabaseProductToFrontend);
 }
 
+export async function getRandomProducts(limit: number = 4): Promise<Product[]> {
+  const supabase = await createClient();
+  
+  // Fetch up to 100 active products
+  const { data: products, error } = await supabase
+    .from('products')
+    .select(`
+      *,
+      brands ( name ),
+      categories ( name ),
+      product_images ( url, is_primary )
+    `)
+    .eq('is_active', true)
+    .limit(100);
+
+  if (error) {
+    console.error("Error fetching random products:", error);
+    return [];
+  }
+
+  // Shuffle the products using Fisher-Yates
+  for (let i = products.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [products[i], products[j]] = [products[j], products[i]];
+  }
+
+  return products.slice(0, limit).map(mapDatabaseProductToFrontend);
+}
+
 export async function getProductsByCategory(categoryName: string): Promise<Product[]> {
   const supabase = await createClient();
   
