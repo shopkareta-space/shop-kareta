@@ -4,6 +4,17 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import React from "react";
 import { notificationService } from "@/lib/notifications/email/services/NotificationService";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+
+// Initialize Supabase admin client here to bypass RLS for admin operations
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dummy.supabase.co';
+const supabaseServiceKey = 
+  process.env.SUPABASE_SERVICE_ROLE_KEY || 
+  process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || 
+  process.env.SUPABASE_SERVICE_KEY || 
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
+  'dummy'; 
+const supabaseAdmin = createSupabaseClient(supabaseUrl, supabaseServiceKey);
 
 // Helper to get current admin email for logging
 async function getAdminEmail() {
@@ -20,7 +31,7 @@ export async function getAdminOrders(filters?: {
   custom_start?: string,
   custom_end?: string
 }) {
-  const supabase = await createClient();
+  const supabase = supabaseAdmin;
   
   let query = supabase
     .from("orders")
@@ -86,7 +97,7 @@ export async function getAdminOrders(filters?: {
 }
 
 export async function getAdminOrder(id: string) {
-  const supabase = await createClient();
+  const supabase = supabaseAdmin;
   
   const { data, error } = await supabase
     .from("orders")
@@ -112,7 +123,7 @@ export async function getAdminOrder(id: string) {
 }
 
 export async function getOrderStats() {
-  const supabase = await createClient();
+  const supabase = supabaseAdmin;
   
   const { data, error } = await supabase
     .from("orders")
@@ -166,7 +177,7 @@ export async function getOrderStats() {
 }
 
 export async function updateOrderStatus(id: string, newStatus: string, comment?: string) {
-  const supabase = await createClient();
+  const supabase = supabaseAdmin;
   const adminEmail = await getAdminEmail();
   
   // 1. Get current order
@@ -279,7 +290,7 @@ export async function bulkUpdateOrderStatus(ids: string[], newStatus: string) {
 }
 
 export async function updatePaymentStatus(id: string, paymentStatus: string) {
-  const supabase = await createClient();
+  const supabase = supabaseAdmin;
   const adminEmail = await getAdminEmail();
   
   const { data: order } = await supabase.from("orders").select("payment_status").eq("id", id).single();
@@ -306,7 +317,7 @@ export async function updatePaymentStatus(id: string, paymentStatus: string) {
 }
 
 export async function updateOrderShipping(id: string, payload: { courier_name?: string, tracking_number?: string, tracking_url?: string, estimated_delivery?: string }) {
-  const supabase = await createClient();
+  const supabase = supabaseAdmin;
   const adminEmail = await getAdminEmail();
   
   const { error } = await supabase
@@ -329,7 +340,7 @@ export async function updateOrderShipping(id: string, payload: { courier_name?: 
 }
 
 export async function updateOrderNotes(id: string, payload: { admin_notes?: string }) {
-  const supabase = await createClient();
+  const supabase = supabaseAdmin;
   const adminEmail = await getAdminEmail();
   
   const { error } = await supabase
@@ -352,7 +363,7 @@ export async function updateOrderNotes(id: string, payload: { admin_notes?: stri
 }
 
 export async function archiveOrder(id: string) {
-  const supabase = await createClient();
+  const supabase = supabaseAdmin;
   const adminEmail = await getAdminEmail();
   
   const { error } = await supabase
