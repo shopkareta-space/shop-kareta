@@ -6,6 +6,7 @@ import { Heart, ShoppingBag, Zap, Check } from "lucide-react";
 import { QuantitySelector } from "./QuantitySelector";
 import { premiumSpring } from "@/lib/motion";
 import { useCartStore } from "@/store/cartStore";
+import { useWishlistStore } from "@/store/wishlistStore";
 import { useRouter } from "next/navigation";
 import type { Product } from "@/types/product";
 
@@ -15,11 +16,12 @@ interface PurchaseActionsProps {
 
 export function PurchaseActions({ product }: PurchaseActionsProps) {
   const [quantity, setQuantity] = useState(1);
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
 
   const addItem = useCartStore((state) => state.addItem);
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistStore();
+  const isWishlisted = isInWishlist(product.id);
   const router = useRouter();
 
   const handleAddToCart = () => {
@@ -121,9 +123,15 @@ export function PurchaseActions({ product }: PurchaseActionsProps) {
         <motion.button
           whileTap={{ scale: 0.9 }}
           transition={premiumSpring}
-          onClick={() => setIsWishlisted(!isWishlisted)}
+          onClick={() => {
+            if (isWishlisted) {
+              removeFromWishlist(product.id);
+            } else {
+              addToWishlist(product);
+            }
+          }}
           className="w-14 h-14 shrink-0 rounded-full border border-brand-gray/20 flex items-center justify-center text-brand-blue hover:border-brand-green hover:text-brand-green transition-colors bg-white"
-          aria-label="Toggle Wishlist"
+          aria-label={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
         >
           <Heart 
             className={`w-6 h-6 transition-transform ${isWishlisted ? "fill-brand-green text-brand-green scale-110" : ""}`} 
