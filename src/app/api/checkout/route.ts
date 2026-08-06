@@ -12,6 +12,10 @@ export async function POST(req: Request) {
     // Initialize Supabase admin client here to avoid build-time environment variable errors
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dummy.supabase.co';
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dummy'; 
+    
+    // Debug log to help diagnose Vercel environment variable issues
+    console.log("Checkout API: Using Service Role Key?", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     const body = await req.json();
