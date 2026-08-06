@@ -10,7 +10,7 @@ async function testCheckout() {
     console.log("Fetching a valid product...");
     const { data: products, error } = await supabase
       .from('products')
-      .select('id, name, price, category_id, inventory_count')
+      .select('id, slug, name, price, category_id, inventory_count')
       .gt('inventory_count', 0)
       .limit(1);
       
@@ -43,7 +43,7 @@ async function testCheckout() {
       totalAmount: 199,
       items: [
         {
-          productId: product.id,
+          productId: product.slug,
           name: product.name,
           price: product.price,
           quantity: 1,
