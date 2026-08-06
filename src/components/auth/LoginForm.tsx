@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
+  
   const login = useAuthStore((state) => state.login);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -62,7 +63,7 @@ export function LoginForm() {
           placeholder="you@example.com"
           aria-invalid={errors.email ? "true" : "false"}
           aria-describedby={errors.email ? "email-error" : undefined}
-          className="w-full px-4 py-3 rounded-xl border border-brand-gray/20 focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green transition-colors bg-white text-[#0D1B2A] placeholder:text-gray-400 scroll-m-20"
+          className="w-full px-4 py-3 rounded-xl border border-brand-gray/20 focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green transition-colors bg-white text-[#0D1B2A] placeholder:text-gray-400"
         />
         {errors.email && (
           <p id="email-error" role="alert" className="mt-1.5 text-sm text-red-500 font-medium">{errors.email.message}</p>
@@ -70,7 +71,15 @@ export function LoginForm() {
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-[#0D1B2A] mb-1.5">Password</label>
+        <div className="flex items-center justify-between mb-1.5">
+          <label htmlFor="password" className="block text-sm font-medium text-[#0D1B2A]">Password</label>
+          <Link 
+            href="/forgot-password"
+            className="text-sm font-medium text-brand-green hover:text-[#0D1B2A] transition-colors"
+          >
+            Forgot password?
+          </Link>
+        </div>
         <div className="relative">
           <input
             id="password"
@@ -79,39 +88,24 @@ export function LoginForm() {
             placeholder="••••••••"
             aria-invalid={errors.password ? "true" : "false"}
             aria-describedby={errors.password ? "password-error" : undefined}
-            className="w-full px-4 py-3 rounded-xl border border-brand-gray/20 focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green transition-colors bg-white text-[#0D1B2A] placeholder:text-gray-400 pr-12 scroll-m-20"
+            className="w-full px-4 py-3 rounded-xl border border-brand-gray/20 focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green transition-colors bg-white text-[#0D1B2A] placeholder:text-gray-400 pr-12"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            aria-label={showPassword ? "Hide password" : "Show password"}
-            aria-pressed={showPassword}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-gray transition-colors min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-gray transition-colors"
+            tabIndex={-1}
           >
-            {showPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
+            {showPassword ? (
+              <EyeOff className="w-5 h-5" />
+            ) : (
+              <Eye className="w-5 h-5" />
+            )}
           </button>
         </div>
         {errors.password && (
           <p id="password-error" role="alert" className="mt-1.5 text-sm text-red-500 font-medium">{errors.password.message}</p>
         )}
-      </div>
-
-      <div className="flex items-center justify-between">
-        <label htmlFor="rememberMe" className="flex items-center gap-2 cursor-pointer group">
-          <input
-            id="rememberMe"
-            {...register("rememberMe")}
-            type="checkbox"
-            className="w-4 h-4 rounded border-brand-gray/30 text-brand-green focus:ring-brand-green cursor-pointer accent-brand-green min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 sm:w-4 sm:h-4 m-[-14px] sm:m-0"
-          />
-          <span className="text-sm text-brand-gray group-hover:text-[#0D1B2A] transition-colors ml-3 sm:ml-0">Remember me</span>
-        </label>
-        <Link 
-          href="/forgot-password"
-          className="text-sm font-medium text-brand-green hover:text-brand-blue transition-colors"
-        >
-          Forgot Password?
-        </Link>
       </div>
 
       {errors.root && (

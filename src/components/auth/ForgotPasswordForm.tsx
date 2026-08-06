@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
 import { forgotPasswordSchema, type ForgotPasswordFormData } from "@/lib/validations/auth";
 import { motion } from "framer-motion";
+import { createClient } from "@/lib/supabase/client";
 
 export function ForgotPasswordForm() {
   const [isSuccess, setIsSuccess] = useState(false);
@@ -21,8 +22,17 @@ export function ForgotPasswordForm() {
   });
 
   const onSubmit = async (data: ForgotPasswordFormData) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1200));
+    const supabase = createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/reset-password`,
+    });
+
+    if (error) {
+      console.error("Password reset error:", error);
+      // Even on error, it's often best practice to show success to prevent email enumeration,
+      // but for better UX, we'll just log it.
+    }
+    
     setIsSuccess(true);
   };
 

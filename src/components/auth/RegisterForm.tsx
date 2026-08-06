@@ -11,10 +11,15 @@ import { useAuthStore } from "@/store/authStore";
 import { PasswordStrength } from "./PasswordStrength";
 import { createClient } from "@/lib/supabase/client";
 
+import { VerificationPending } from "./VerificationPending";
+
 export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
+  // Verification State
+  const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
+
   const login = useAuthStore((state) => state.login);
   const router = useRouter();
 
@@ -45,6 +50,7 @@ export function RegisterForm() {
       email: data.email,
       password: data.password,
       options: {
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
         data: {
           full_name: data.fullName,
           mobile: data.mobile || null,
@@ -57,10 +63,19 @@ export function RegisterForm() {
       return setError("root", { type: "manual", message: error.message });
     }
     
-    // Successful registration & auto-login, onAuthStateChange in SessionProvider handles state
-    router.push("/");
-    router.refresh();
+    // Switch to Verification Pending UI
+    setVerificationEmail(data.email);
   };
+
+  if (verificationEmail) {
+    return (
+      <VerificationPending 
+        email={verificationEmail}
+        onCancel={() => router.push("/login")}
+        onChangeEmail={() => setVerificationEmail(null)}
+      />
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">

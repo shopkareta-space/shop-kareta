@@ -1,9 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useOrderStore } from "@/store/orderStore";
 import { useWishlistStore } from "@/store/wishlistStore";
-import { useAddressStore } from "@/store/addressStore";
+import { addressService } from "@/lib/services/address.service";
 import { SummaryCard } from "@/components/account/SummaryCard";
 import { ShoppingBag, Heart, MapPin, Package } from "lucide-react";
 import BlurFade from "@/components/ui/blur-fade";
@@ -14,7 +15,12 @@ export default function AccountDashboardPage() {
   const { user } = useAuthStore();
   const { orders } = useOrderStore();
   const { items: wishlistItems } = useWishlistStore();
-  const { addresses } = useAddressStore();
+  const [addressCount, setAddressCount] = useState(0);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    addressService.getAddresses(user.id).then((data) => setAddressCount(data.length));
+  }, [user?.id]);
 
   const activeOrders = orders.filter(o => o.status === "processing" || o.status === "shipped");
   const recentOrders = [...orders].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 2);
@@ -58,7 +64,7 @@ export default function AccountDashboardPage() {
         />
         <SummaryCard 
           title="Saved Addresses" 
-          value={addresses.length} 
+          value={addressCount} 
           icon={MapPin} 
         />
       </BlurFade>
