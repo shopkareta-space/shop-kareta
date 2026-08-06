@@ -94,7 +94,16 @@ export default async function Homepage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {randomProducts.map((product, index) => (
               <BlurFade key={product.id} delay={0.1 + index * 0.1}>
-                <ProductCard product={product} />
+                <ProductCard 
+                  id={product.id}
+                  name={product.name}
+                  brand={product.brand}
+                  category={product.category}
+                  price={product.price}
+                  originalPrice={product.originalPrice}
+                  badge={product.badge}
+                  images={product.images}
+                />
               </BlurFade>
             ))}
           </div>
