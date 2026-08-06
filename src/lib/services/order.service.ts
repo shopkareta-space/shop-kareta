@@ -74,18 +74,41 @@ export async function cancelOrder(orderId: string) {
     throw new Error("Order ID is required");
   }
 
-  // First verify the order exists and is in "processing" state
-  const { data: order, error: fetchError } = await supabase
-    .from("orders")
-    .select("status")
-    .eq("id", orderId)
-    .single();
+  const isOrderNumber = orderId.startsWith("SK-");
+  let query = supabase.from("orders").select("id, status");
+  
+  if (isOrderNumber) {
+    query = query.eq("order_number", orderId);
+  } else {
+    query = query.eq("id", orderId);
+  }
+
+  // First verify the order exists
+  const { data: order, error: fetchError } = await query.single();
 
   if (fetchError || !order) {
+    // Try fallback for SK- UUID format
+    if (isOrderNumber) {
+      const uuidPart = orderId.replace("SK-", "").toLowerCase();
+      if (uuidPart.length >= 8) {
+        const { data: fallbackOrder, error: fallbackError } = await supabase
+          .from("orders")
+          .select("id, status")
+          .ilike("id", `${uuidPart}%`)
+          .limit(1)
+          .single();
+          
+        if (!fallbackError && fallbackOrder) {
+           return cancelOrder(fallbackOrder.id); // Recursively call with actual UUID
+        }
+      }
+    }
     throw new Error("Order not found");
   }
 
-  if (order.status !== "processing") {
+  const actualOrderId = order.id;
+
+  if (order.status !== "processing" && order.status !== "placed" && order.status !== "pending") {
     throw new Error("Order cannot be cancelled at this stage.");
   }
 
@@ -93,7 +116,7 @@ export async function cancelOrder(orderId: string) {
   const { data: items, error: itemsError } = await supabase
     .from("order_items")
     .select("product_id, quantity")
-    .eq("order_id", orderId);
+    .eq("order_id", actualOrderId);
 
   if (itemsError) {
     console.error("Fetch items error during cancellation:", itemsError);
@@ -104,7 +127,7 @@ export async function cancelOrder(orderId: string) {
   const { error: updateError } = await supabase
     .from("orders")
     .update({ status: "cancelled" })
-    .eq("id", orderId);
+    .eq("id", actualOrderId);
 
   if (updateError) {
     console.error("Cancel order error:", updateError);
@@ -113,8 +136,8 @@ export async function cancelOrder(orderId: string) {
 
   // Log status history
   await supabase.from("order_status_history").insert({
-    order_id: orderId,
-    previous_status: "processing",
+    order_id: actualOrderId,
+    previous_status: order.status,
     new_status: "cancelled",
     comment: "Cancelled by customer"
   });

@@ -5,6 +5,7 @@ import { getOrderById } from "@/lib/services/order.service";
 import CancelOrderButton from "./CancelOrderButton";
 import { Package, Clock, CheckCircle2, XCircle, MapPin, CreditCard, ChevronLeft, Truck, Box, HelpCircle } from "lucide-react";
 import BlurFade from "@/components/ui/blur-fade";
+import RealtimeOrderSync from "./RealtimeOrderSync";
 
 const statusConfig = {
   placed: { color: "text-blue-500", bg: "bg-blue-50", border: "border-blue-100", label: "Order Placed" },
@@ -52,6 +53,7 @@ export default async function TrackOrderPage({ params }: { params: Promise<{ ord
 
   return (
     <div className="min-h-screen bg-brand-light/30 pt-32 pb-20 px-4">
+      <RealtimeOrderSync orderId={order.id} />
       <div className="max-w-5xl mx-auto space-y-6">
         
         {/* Header */}

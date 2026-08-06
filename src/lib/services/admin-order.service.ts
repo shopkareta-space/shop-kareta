@@ -28,7 +28,7 @@ export async function getAdminOrders(filters?: {
       *,
       order_items (id, quantity)
     `)
-    .eq("is_archived", false)
+    .or("is_archived.eq.false,is_archived.is.null")
     .order("created_at", { ascending: false });
 
   if (filters?.status && filters.status !== "all") {
@@ -117,7 +117,7 @@ export async function getOrderStats() {
   const { data, error } = await supabase
     .from("orders")
     .select("status, total_amount, created_at")
-    .eq("is_archived", false);
+    .or("is_archived.eq.false,is_archived.is.null");
 
   if (error) {
     console.error("Error fetching order stats:", error);
@@ -140,7 +140,7 @@ export async function getOrderStats() {
   const todayStr = new Date().toISOString().split('T')[0];
 
   data.forEach((order: any) => {
-    if (order.status === 'pending') stats.pending++;
+    if (order.status === 'placed' || order.status === 'pending') stats.pending++;
     if (order.status === 'processing') stats.processing++;
     if (order.status === 'packed') stats.packed++;
     if (order.status === 'shipped') stats.shipped++;
@@ -179,6 +179,7 @@ export async function updateOrderStatus(id: string, newStatus: string, comment?:
   
   // Validation (Prevent invalid transitions)
   const validTransitions: any = {
+    'placed': ['processing', 'cancelled'],
     'pending': ['processing', 'cancelled'],
     'processing': ['packed', 'cancelled'],
     'packed': ['shipped', 'cancelled'],
