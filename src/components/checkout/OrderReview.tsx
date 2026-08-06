@@ -46,6 +46,7 @@ export function OrderReview({ onBack, onEditStep, onPlaceOrder }: OrderReviewPro
 
       // Save delivery ID in session storage to show on success page
       sessionStorage.setItem("latestDeliveryId", data.deliveryId);
+      sessionStorage.setItem("latestOrderId", data.orderId);
       
       onPlaceOrder();
     } catch (error) {
