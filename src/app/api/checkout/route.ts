@@ -31,17 +31,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // 1. Fetch products to get their actual UUIDs based on the slugs (items.productId is the slug)
-    const slugs = items.map((item: any) => item.productId);
+    // 1. Fetch products to get their actual UUIDs based on the ids passed (items.productId is the UUID)
+    const productIds = items.map((item: any) => item.productId);
     const { data: productsData } = await supabase
       .from('products')
       .select('id, slug')
-      .in('slug', slugs);
+      .in('id', productIds);
 
     const productMap = new Map();
     if (productsData) {
       productsData.forEach((p: any) => {
-        productMap.set(p.slug, p.id);
+        // We just map the requested ID back to itself to confirm it exists
+        productMap.set(p.id, p.id);
       });
     }
 
