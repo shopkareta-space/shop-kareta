@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ShopFilters } from "@/components/storefront/ShopFilters";
 import { MobileFilterDrawer } from "@/components/storefront/MobileFilterDrawer";
@@ -16,10 +17,49 @@ interface ShopClientProps {
 }
 
 export function ShopClient({ initialProducts, categories, brands }: ShopClientProps) {
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const searchParams = useSearchParams();
+
+  // Initialize selected categories from URL (e.g., ?category=health-wellness)
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
+    const categoryQuery = searchParams?.getAll("category") || [];
+    if (categoryQuery.length === 0) return [];
+    return categories.filter(c => 
+      categoryQuery.some(q => c.toLowerCase().includes(q.toLowerCase().replace(/-/g, ' '))) ||
+      categoryQuery.some(q => c.toLowerCase().replace(/[^a-z0-9]+/g, '-') === q)
+    );
+  });
+
+  // Initialize selected brands from URL (e.g., ?brand=vedique)
+  const [selectedBrands, setSelectedBrands] = useState<string[]>(() => {
+    const brandQuery = searchParams?.getAll("brand") || [];
+    if (brandQuery.length === 0) return [];
+    return brands.filter(b => 
+      brandQuery.some(q => b.toLowerCase().includes(q.toLowerCase().replace(/-/g, ' '))) ||
+      brandQuery.some(q => b.toLowerCase().replace(/[^a-z0-9]+/g, '-') === q)
+    );
+  });
+
   const [priceRange, setPriceRange] = useState<number[]>([0, 5000]);
   const [sortValue, setSortValue] = useState("recommended");
+
+  // Sync state if URL changes (optional, useful for browser back/forward navigation)
+  useEffect(() => {
+    const categoryQuery = searchParams?.getAll("category") || [];
+    if (categoryQuery.length > 0) {
+      setSelectedCategories(categories.filter(c => 
+        categoryQuery.some(q => c.toLowerCase().includes(q.toLowerCase().replace(/-/g, ' '))) ||
+        categoryQuery.some(q => c.toLowerCase().replace(/[^a-z0-9]+/g, '-') === q)
+      ));
+    }
+
+    const brandQuery = searchParams?.getAll("brand") || [];
+    if (brandQuery.length > 0) {
+      setSelectedBrands(brands.filter(b => 
+        brandQuery.some(q => b.toLowerCase().includes(q.toLowerCase().replace(/-/g, ' '))) ||
+        brandQuery.some(q => b.toLowerCase().replace(/[^a-z0-9]+/g, '-') === q)
+      ));
+    }
+  }, [searchParams, categories, brands]);
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategories(prev => 

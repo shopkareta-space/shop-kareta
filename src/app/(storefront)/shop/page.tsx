@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getProducts, getCategories, getBrands } from "@/lib/services/product.service";
 import { ShopClient } from "@/components/storefront/ShopClient";
 
@@ -11,10 +12,12 @@ export default async function ShopPage() {
   ]);
 
   return (
-    <ShopClient 
-      initialProducts={products}
-      categories={categories}
-      brands={brands}
-    />
+    <Suspense fallback={<div className="min-h-screen bg-brand-light flex items-center justify-center">Loading shop...</div>}>
+      <ShopClient 
+        initialProducts={products}
+        categories={categories}
+        brands={brands}
+      />
+    </Suspense>
   );
 }
