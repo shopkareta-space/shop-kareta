@@ -56,16 +56,18 @@ export async function POST(req: Request) {
       throw new Error("Failed to create order");
     }
 
-    // 2. Fetch products to check inventory based on UUIDs (items.productId)
-    const productIds = items.map((item: any) => item.productId);
+    // 2. Fetch products to get their actual UUIDs based on the slugs (items.productId is the slug)
+    const slugs = items.map((item: any) => item.productId);
     const { data: productsData } = await supabase
       .from('products')
-      .select('id, inventory_count')
-      .in('id', productIds);
+      .select('id, slug, inventory_count')
+      .in('slug', slugs);
 
+    const productMap = new Map();
     const productInventory = new Map();
     if (productsData) {
       productsData.forEach((p: any) => {
+        productMap.set(p.slug, p.id);
         productInventory.set(p.id, p.inventory_count || 0);
       });
     }
@@ -73,7 +75,7 @@ export async function POST(req: Request) {
     // 3. Insert into order_items table
     const orderItemsToInsert = items.map((item: any) => ({
       order_id: order.id,
-      product_id: item.productId,
+      product_id: productMap.get(item.productId) || null,
       variant_id: item.variantId || null,
       product_name: item.name,
       quantity: item.quantity,
@@ -101,15 +103,15 @@ export async function POST(req: Request) {
     // 5. Deduct inventory
     if (productsData) {
       for (const item of items) {
-        const productId = item.productId;
-        if (productId) {
-          const currentInventory = productInventory.get(productId) || 0;
+        const actualUuid = productMap.get(item.productId);
+        if (actualUuid) {
+          const currentInventory = productInventory.get(actualUuid) || 0;
           const newInventory = Math.max(0, currentInventory - item.quantity);
           
           await supabase
             .from("products")
             .update({ inventory_count: newInventory })
-            .eq("id", productId);
+            .eq("id", actualUuid);
         }
       }
     }
