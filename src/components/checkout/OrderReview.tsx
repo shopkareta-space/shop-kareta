@@ -6,6 +6,7 @@ import { useCheckoutStore } from "@/store/checkoutStore";
 import { useCartStore } from "@/store/cartStore";
 import { fadeUp, premiumSpring } from "@/lib/motion";
 import { useState } from "react";
+import { AlertCircle } from "lucide-react";
 
 interface OrderReviewProps {
   onBack: () => void;
@@ -26,9 +27,11 @@ export function OrderReview({ onBack, onEditStep, onPlaceOrder }: OrderReviewPro
   const shippingCost = isFreeShipping ? 0 : 99;
   const cartTotal = subtotal - discount + shippingCost;
   const [isPlacing, setIsPlacing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handlePlaceOrder = async () => {
     setIsPlacing(true);
+    setErrorMsg(null);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -63,9 +66,9 @@ export function OrderReview({ onBack, onEditStep, onPlaceOrder }: OrderReviewPro
       // useCartStore.getState().clearCart();
 
       onPlaceOrder();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Failed to place order. Please try again.");
+      setErrorMsg(error.message || "Failed to place order. Please try again.");
       setIsPlacing(false);
     }
   };
@@ -124,6 +127,19 @@ export function OrderReview({ onBack, onEditStep, onPlaceOrder }: OrderReviewPro
         </div>
 
       </div>
+
+      {errorMsg && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+          <div className="text-sm text-red-800">
+            <p className="font-semibold mb-1">Could not process your order</p>
+            <p>{errorMsg}</p>
+            <p className="mt-2 text-xs opacity-80">
+              <strong>Tip:</strong> If you are on Vercel, ensure your production Supabase database has all the SQL migrations applied (including `process_checkout` RPC) and that your Vercel Environment Variables are set properly.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-between mt-4">
         <button
