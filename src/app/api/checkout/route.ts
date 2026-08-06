@@ -24,6 +24,12 @@ export async function POST(req: Request) {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
+    // Securely get the logged in user using cookies
+    const { createClient: createAuthClient } = await import('@/lib/supabase/server');
+    const authSupabase = await createAuthClient();
+    const { data: { user } } = await authSupabase.auth.getUser();
+    const secureUserId = user?.id || null;
+    
     const body = await req.json();
     const { contact, shippingAddress, deliveryMethod, paymentMethod, items, totalAmount, userId, couponCode } = body;
 
@@ -95,7 +101,7 @@ export async function POST(req: Request) {
 
     // 3. Execute atomic checkout transaction
     const { data: newOrderId, error: checkoutError } = await supabase.rpc('process_checkout', {
-      p_user_id: userId || null,
+      p_user_id: secureUserId,
       p_total_amount: finalAmountToCharge,
       p_payment_status: paymentMethod === 'cod' ? 'pending' : 'paid',
       p_payment_method: paymentMethod,
