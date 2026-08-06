@@ -278,3 +278,52 @@ function getBadge(product: any): string | undefined {
   }
   return undefined;
 }
+
+export async function searchProducts(query: string, limit: number = 20): Promise<Product[]> {
+  const supabase = await createClient();
+  const term = `%${query}%`;
+  
+  // 1. Find matching brands
+  const { data: brands } = await supabase.from('brands').select('id').ilike('name', term);
+  const brandIds = brands?.map(b => b.id) || [];
+  
+  // 2. Find matching categories
+  const { data: categories } = await supabase.from('categories').select('id').ilike('name', term);
+  const categoryIds = categories?.map(c => c.id) || [];
+  
+  // 3. Find matching variants
+  const { data: variants } = await supabase.from('product_variants').select('product_id').ilike('name', term);
+  const variantProductIds = variants?.map(v => v.product_id) || [];
+
+  // 4. Construct the complex OR query for products
+  let orQuery = `name.ilike.${term},sku.ilike.${term},product_code.ilike.${term},slug.ilike.${term},description.ilike.${term}`;
+  if (brandIds.length > 0) {
+    orQuery += `,brand_id.in.(${brandIds.join(',')})`;
+  }
+  if (categoryIds.length > 0) {
+    orQuery += `,category_id.in.(${categoryIds.join(',')})`;
+  }
+  if (variantProductIds.length > 0) {
+    orQuery += `,id.in.(${variantProductIds.join(',')})`;
+  }
+
+  const { data: products, error } = await supabase
+    .from('products')
+    .select(`
+      *,
+      brands ( name ),
+      categories ( name ),
+      product_images ( url, is_primary )
+    `)
+    .eq('is_active', true)
+    .or(orQuery)
+    .limit(limit);
+
+  if (error) {
+    console.error(`Error searching products:`, error);
+    return [];
+  }
+
+  return products.map(mapDatabaseProductToFrontend);
+}
+
