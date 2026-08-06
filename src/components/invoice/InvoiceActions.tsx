@@ -20,12 +20,27 @@ export default function InvoiceActions({ invoiceId, backUrl }: { invoiceId: stri
       const element = document.getElementById("invoice-container");
       if (!element) return;
 
-      const canvas = await html2canvas(element, {
+      // Clone the element to avoid transform issues from parent layouts (like BlurFade)
+      const clonedElement = element.cloneNode(true) as HTMLElement;
+      
+      // Make it visible but off-screen and isolated from any CSS transforms
+      clonedElement.style.position = 'absolute';
+      clonedElement.style.top = '-9999px';
+      clonedElement.style.left = '-9999px';
+      clonedElement.style.width = '800px'; 
+      clonedElement.style.transform = 'none';
+      
+      document.body.appendChild(clonedElement);
+
+      const canvas = await html2canvas(clonedElement, {
         scale: 2, // higher resolution
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
       });
+
+      // Remove the clone after capture
+      document.body.removeChild(clonedElement);
 
       const imgData = canvas.toDataURL("image/png");
       

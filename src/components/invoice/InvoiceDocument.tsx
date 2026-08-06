@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import InvoiceActions from "@/components/invoice/InvoiceActions";
 
 interface InvoiceDocumentProps {
@@ -26,7 +26,11 @@ export default async function InvoiceDocument({ orderId, viewContext }: InvoiceD
       .single();
 
     if (adminProfile?.role !== "admin") {
-      return notFound();
+      return (
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <h2 className="text-xl font-bold text-gray-700">Invoice unavailable (Access Denied)</h2>
+        </div>
+      );
     }
   }
 
@@ -42,13 +46,21 @@ export default async function InvoiceDocument({ orderId, viewContext }: InvoiceD
 
   if (error || !order) {
     console.error("Invoice Error: Failed to fetch order", { orderId, error });
-    return notFound();
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <h2 className="text-xl font-bold text-gray-700">Invoice unavailable</h2>
+      </div>
+    );
   }
 
   // If customer context, verify ownership
   if (viewContext === "customer" && order.user_id !== user.id) {
     console.error("Invoice Error: Ownership mismatch", { orderUserId: order.user_id, userId: user.id });
-    return notFound(); // Return 404 to hide the existence of other orders
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <h2 className="text-xl font-bold text-gray-700">Invoice unavailable</h2>
+      </div>
+    );
   }
 
   console.log("Invoice successfully fetched for order:", order.id);
