@@ -75,6 +75,7 @@ export async function POST(req: Request) {
     // 2.5 Calculate exact Cart Total securely
     let serverTotalAmount = serverSubtotal;
     let appliedCouponToSave = null;
+    let discountAmount = 0;
     
     if (couponCode) {
       const { data: couponData } = await supabase
@@ -85,8 +86,8 @@ export async function POST(req: Request) {
         
       if (couponData && couponData.is_active) {
         if (!couponData.valid_until || new Date(couponData.valid_until) > new Date()) {
-          const discount = (serverSubtotal * couponData.discount_percent) / 100;
-          serverTotalAmount -= discount;
+          discountAmount = (serverSubtotal * couponData.discount_percent) / 100;
+          serverTotalAmount -= discountAmount;
           appliedCouponToSave = couponCode;
         }
       }
@@ -135,19 +136,42 @@ export async function POST(req: Request) {
 
     // 4. Send Confirmation Email via Notification Service
     try {
+      // Customer Confirmation
       await notificationService.sendOrderConfirmation(
         contact.email,
         contact.firstName,
         newOrderId,
         orderNumber,
-        totalAmount,
+        finalAmountToCharge,
         shippingAddress,
         orderItemsInput.map((i: any) => ({
           name: i.product_name,
+          variant_name: i.variant_name,
           quantity: i.quantity,
           price: i.price,
           image: i.image
-        }))
+        })),
+        new Date().toLocaleDateString(),
+        paymentMethod,
+        paymentMethod === 'cod' ? 'pending' : 'paid',
+        "3-5 Business Days",
+        serverSubtotal,
+        shippingCost,
+        discountAmount
+      );
+
+      // Admin Notification
+      await notificationService.sendAdminAlert(
+        "New Order Received",
+        `Order ${orderNumber} has been successfully placed by ${contact.firstName}.`,
+        {
+          "Order Number": orderNumber,
+          "Customer Name": `${contact.firstName} ${contact.lastName}`,
+          "Amount": `₹${finalAmountToCharge}`,
+          "Payment Method": paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'
+        },
+        `https://shopkareta.com/admin/orders/${newOrderId}`,
+        "View Order"
       );
     } catch (emailError) {
       console.error("Failed to queue email:", emailError);

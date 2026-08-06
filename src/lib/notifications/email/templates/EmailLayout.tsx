@@ -38,18 +38,16 @@ export const EmailLayout = ({ previewText, children }: EmailLayoutProps) => {
           <Hr style={hr} />
           <Section style={footer}>
             <Text style={footerText}>
-              Need help? Contact our support team at{" "}
-              <Link href="mailto:support@shopkareta.com" style={link}>
-                support@shopkareta.com
-              </Link>
+              <strong>Need help?</strong><br />
+              Customer Care: 9529285971<br />
+              Email: <Link href="mailto:shopkareta@gmail.com" style={link}>shopkareta@gmail.com</Link>
             </Text>
             <Text style={footerText}>
-              <Link href="https://shopkareta.com" style={link}>Website</Link> •{" "}
               <Link href="https://instagram.com/shopkareta" style={link}>Instagram</Link> •{" "}
               <Link href="https://facebook.com/shopkareta" style={link}>Facebook</Link>
             </Text>
             <Text style={footerCopyright}>
-              &copy; {new Date().getFullYear()} Shop Kareta (SK Holdings Pvt Ltd). All rights reserved.
+              &copy; {new Date().getFullYear()} Shop Kareta. All rights reserved.
             </Text>
           </Section>
         </Container>

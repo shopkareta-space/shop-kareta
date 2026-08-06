@@ -57,11 +57,18 @@ class NotificationService {
     deliveryId: string, 
     totalAmount: number, 
     shippingAddress: any, 
-    items: any[]
+    items: any[],
+    orderDate: string,
+    paymentMethod: string,
+    paymentStatus: string,
+    estimatedDelivery: string,
+    subtotal: number,
+    shippingCost: number,
+    discountAmount: number
   ) {
     const payload: EmailPayload = {
       to,
-      subject: `Order Confirmed: #${deliveryId}`,
+      subject: `🎉 Your Shop Kareta Order is Confirmed! (#${deliveryId})`,
       templateName: "OrderConfirmation",
       react: React.createElement(OrderConfirmationEmail, {
         customerName,
@@ -69,7 +76,14 @@ class NotificationService {
         deliveryId,
         totalAmount,
         shippingAddress,
-        items
+        items,
+        orderDate,
+        paymentMethod,
+        paymentStatus,
+        estimatedDelivery,
+        subtotal,
+        shippingCost,
+        discountAmount
       })
     };
     
@@ -106,13 +120,22 @@ class NotificationService {
   public async sendAdminAlert(
     title: string,
     message: string,
-    to: string = 'admin@shopkareta.com'
+    details?: Record<string, string>,
+    actionUrl?: string,
+    actionText?: string
   ) {
+    const to = process.env.ADMIN_EMAIL || 'admin@shopkareta.com';
     const payload: EmailPayload = {
       to,
       subject: `Admin Alert: ${title}`,
       templateName: "AdminAlert",
-      react: React.createElement(AdminNotificationEmail, { title, message })
+      react: React.createElement(AdminNotificationEmail, { 
+        title, 
+        message, 
+        details, 
+        actionUrl, 
+        actionText 
+      })
     };
 
     await this.queueEmail(payload);

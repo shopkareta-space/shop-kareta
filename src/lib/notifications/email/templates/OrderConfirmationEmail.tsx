@@ -22,13 +22,22 @@ interface OrderConfirmationEmailProps {
     state?: string;
     pincode?: string;
     full_name?: string;
+    phone?: string;
   };
   items: Array<{
     name: string;
+    variant_name?: string;
     quantity: number;
     price: number;
     image?: string;
   }>;
+  orderDate: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  estimatedDelivery: string;
+  subtotal: number;
+  shippingCost: number;
+  discountAmount: number;
 }
 
 export const OrderConfirmationEmail = ({
@@ -40,15 +49,25 @@ export const OrderConfirmationEmail = ({
     addressLine1: "123 Main St",
     city: "Mumbai",
     state: "Maharashtra",
-    pincode: "400001"
+    pincode: "400001",
+    phone: "9876543210"
   },
-  items = []
+  items = [],
+  orderDate = new Date().toLocaleDateString(),
+  paymentMethod = "cod",
+  paymentStatus = "pending",
+  estimatedDelivery = "3-5 Business Days",
+  subtotal = 0,
+  shippingCost = 0,
+  discountAmount = 0
 }: OrderConfirmationEmailProps) => {
-  const formattedTotal = new Intl.NumberFormat('en-IN', {
+  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
     maximumFractionDigits: 0
-  }).format(totalAmount);
+  }).format(amount);
+
+  const formattedTotal = formatCurrency(totalAmount);
 
   return (
     <EmailLayout previewText={`Your Shop Kareta Order #${deliveryId} is confirmed!`}>
@@ -64,6 +83,10 @@ export const OrderConfirmationEmail = ({
       <Section style={box}>
         <Text style={boxText}>
           <strong>Order Number:</strong> {deliveryId}<br />
+          <strong>Order Date:</strong> {orderDate}<br />
+          <strong>Payment Method:</strong> {paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}<br />
+          <strong>Payment Status:</strong> <span style={{ textTransform: 'capitalize' }}>{paymentStatus}</span><br />
+          <strong>Estimated Delivery:</strong> {estimatedDelivery}<br />
           <strong>Order Total:</strong> {formattedTotal}<br />
         </Text>
       </Section>
@@ -73,8 +96,8 @@ export const OrderConfirmationEmail = ({
           Track Order
         </Button>
         <span style={{ margin: "0 10px" }}></span>
-        <Button href={`https://shopkareta.com/invoice/${orderId}`} style={{...button, backgroundColor: "#f1f5f9", color: "#0f172a", border: "1px solid #cbd5e1"}}>
-          View Invoice
+        <Button href={`https://shopkareta.com/shop`} style={{...button, backgroundColor: "#f1f5f9", color: "#0f172a", border: "1px solid #cbd5e1"}}>
+          Continue Shopping
         </Button>
       </Section>
 
@@ -82,7 +105,8 @@ export const OrderConfirmationEmail = ({
 
       <Heading as="h2" style={h2}>Shipping Address</Heading>
       <Text style={text}>
-        {shippingAddress.full_name && <>{shippingAddress.full_name}<br /></>}
+        {shippingAddress.full_name && <strong>{shippingAddress.full_name}<br /></strong>}
+        {shippingAddress.phone && <>{shippingAddress.phone}<br /></>}
         {shippingAddress.addressLine1}<br />
         {shippingAddress.addressLine2 && <>{shippingAddress.addressLine2}<br /></>}
         {shippingAddress.city}, {shippingAddress.state} {shippingAddress.pincode}
@@ -93,23 +117,62 @@ export const OrderConfirmationEmail = ({
       <Heading as="h2" style={h2}>Order Summary</Heading>
       <Section>
         {items.map((item, index) => (
-          <Row key={index} style={{ marginBottom: "10px" }}>
-            <Column style={{ width: "80%" }}>
-              <Text style={itemText}>{item.name} x {item.quantity}</Text>
+          <Row key={index} style={{ marginBottom: "15px" }}>
+            <Column style={{ width: "60px" }}>
+              {item.image && (
+                <img src={item.image} alt={item.name} width="50" height="50" style={{ borderRadius: "4px", objectFit: "cover" }} />
+              )}
+            </Column>
+            <Column style={{ width: "65%", paddingLeft: "10px" }}>
+              <Text style={{ ...itemText, fontWeight: "bold" }}>{item.name}</Text>
+              {item.variant_name && <Text style={{ ...itemText, fontSize: "12px", color: "#64748b" }}>Variant: {item.variant_name}</Text>}
+              <Text style={{ ...itemText, fontSize: "12px", color: "#64748b" }}>Qty: {item.quantity} x {formatCurrency(item.price)}</Text>
             </Column>
             <Column align="right">
-              <Text style={itemText}>₹{item.price * item.quantity}</Text>
+              <Text style={{ ...itemText, fontWeight: "bold" }}>{formatCurrency(item.price * item.quantity)}</Text>
             </Column>
           </Row>
         ))}
-        <Row style={{ marginTop: "20px", borderTop: "1px solid #e2e8f0", paddingTop: "10px" }}>
-          <Column style={{ width: "80%" }}>
-            <Text style={{ ...itemText, fontWeight: "bold" }}>Total</Text>
-          </Column>
-          <Column align="right">
-            <Text style={{ ...itemText, fontWeight: "bold" }}>{formattedTotal}</Text>
-          </Column>
-        </Row>
+        
+        <Section style={{ marginTop: "20px", borderTop: "1px solid #e2e8f0", paddingTop: "15px" }}>
+          <Row style={{ marginBottom: "8px" }}>
+            <Column style={{ width: "80%" }}>
+              <Text style={itemText}>Subtotal</Text>
+            </Column>
+            <Column align="right">
+              <Text style={itemText}>{formatCurrency(subtotal)}</Text>
+            </Column>
+          </Row>
+          
+          <Row style={{ marginBottom: "8px" }}>
+            <Column style={{ width: "80%" }}>
+              <Text style={itemText}>Shipping</Text>
+            </Column>
+            <Column align="right">
+              <Text style={itemText}>{shippingCost > 0 ? formatCurrency(shippingCost) : "Free"}</Text>
+            </Column>
+          </Row>
+
+          {discountAmount > 0 && (
+            <Row style={{ marginBottom: "8px" }}>
+              <Column style={{ width: "80%" }}>
+                <Text style={{ ...itemText, color: "#16a34a" }}>Discount</Text>
+              </Column>
+              <Column align="right">
+                <Text style={{ ...itemText, color: "#16a34a" }}>-{formatCurrency(discountAmount)}</Text>
+              </Column>
+            </Row>
+          )}
+
+          <Row style={{ marginTop: "12px", borderTop: "1px solid #e2e8f0", paddingTop: "12px" }}>
+            <Column style={{ width: "80%" }}>
+              <Text style={{ ...itemText, fontWeight: "bold", fontSize: "16px", color: "#0f172a" }}>Grand Total</Text>
+            </Column>
+            <Column align="right">
+              <Text style={{ ...itemText, fontWeight: "bold", fontSize: "16px", color: "#0f172a" }}>{formattedTotal}</Text>
+            </Column>
+          </Row>
+        </Section>
       </Section>
     </EmailLayout>
   );
