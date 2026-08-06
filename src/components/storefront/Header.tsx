@@ -154,11 +154,11 @@ export default function Header() {
           </AnimatePresence>
 
           {isMounted && isAuthenticated ? (
-            <div className="hidden sm:block">
+            <div className="block">
               <AccountDropdown />
             </div>
           ) : (
-            <Link href="/login" aria-label="Login" className={`p-2 transition-colors hidden sm:block hover:text-[#0F6B46] ${isHome ? 'text-white' : 'text-[#0D1B2A]'}`}>
+            <Link href="/login" aria-label="Login" className={`p-2 transition-colors block hover:text-[#0F6B46] ${isHome ? 'text-white' : 'text-[#0D1B2A]'}`}>
               <User className="w-5 h-5 sm:w-6 sm:h-6" />
             </Link>
           )}
