@@ -18,22 +18,45 @@ export async function getOrderById(orderId: string) {
   }
 
   // Fetch the order
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .select("*")
-    .eq("id", orderId)
-    .single();
+  const isOrderNumber = orderId.startsWith("SK-");
+  
+  let orderData;
+  let orderError;
 
-  if (orderError || !order) {
+  if (isOrderNumber) {
+    // Try by order_number first
+    const res = await supabase.from("orders").select("*").eq("order_number", orderId).single();
+    if (res.data) {
+      orderData = res.data;
+    } else {
+      // Fallback: If order_number is missing, it might be the SK-UUID fallback format from older API responses
+      const uuidPart = orderId.replace("SK-", "").toLowerCase();
+      // Only attempt if it looks like a hex string
+      if (uuidPart.length >= 8) {
+        const fallbackRes = await supabase.from("orders").select("*").ilike("id", `${uuidPart}%`).limit(1).single();
+        orderData = fallbackRes.data;
+        orderError = fallbackRes.error;
+      }
+    }
+  } else {
+    // UUID lookup
+    const res = await supabase.from("orders").select("*").eq("id", orderId).single();
+    orderData = res.data;
+    orderError = res.error;
+  }
+
+  if (!orderData) {
     console.error("Fetch order error:", orderError);
     return null;
   }
+  
+  const order = orderData;
 
   // Fetch the items
   const { data: items, error: itemsError } = await supabase
     .from("order_items")
     .select("*")
-    .eq("order_id", orderId);
+    .eq("order_id", order.id);
 
   if (itemsError) {
     console.error("Fetch order items error:", itemsError);

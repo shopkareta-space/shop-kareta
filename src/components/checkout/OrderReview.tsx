@@ -16,7 +16,15 @@ interface OrderReviewProps {
 export function OrderReview({ onBack, onEditStep, onPlaceOrder }: OrderReviewProps) {
   const { contact, shippingAddress, deliveryMethod, paymentMethod } = useCheckoutStore();
   const cartItems = useCartStore((state) => state.items);
-  const cartTotal = cartItems.reduce((total, item) => total + item.product.price * item.quantity, 0);
+  const coupon = useCartStore((state) => state.coupon);
+  
+  // Need to add shipping logic + discount logic here to match the real amount, 
+  // but we should just pass the coupon to the API and let it calculate the final amount.
+  const subtotal = cartItems.reduce((total, item) => total + item.product.price * item.quantity, 0);
+  const discount = coupon ? (subtotal * coupon.discountPercent) / 100 : 0;
+  const isFreeShipping = subtotal >= 1000;
+  const shippingCost = isFreeShipping ? 0 : 99;
+  const cartTotal = subtotal - discount + shippingCost;
   const [isPlacing, setIsPlacing] = useState(false);
 
   const handlePlaceOrder = async () => {
@@ -37,7 +45,8 @@ export function OrderReview({ onBack, onEditStep, onPlaceOrder }: OrderReviewPro
             price: item.product.price,
             image: item.product.images?.[0] || ""
           })),
-          totalAmount: cartTotal
+          totalAmount: cartTotal,
+          couponCode: coupon?.code
         })
       });
 
@@ -45,11 +54,13 @@ export function OrderReview({ onBack, onEditStep, onPlaceOrder }: OrderReviewPro
       if (!res.ok) throw new Error(data.error || "Failed to place order");
 
       // Save delivery ID in session storage to show on success page
-      sessionStorage.setItem("latestDeliveryId", data.deliveryId);
+      sessionStorage.setItem("latestDeliveryId", data.orderNumber || data.deliveryId);
       sessionStorage.setItem("latestOrderId", data.orderId);
+      sessionStorage.setItem("latestOrderTotal", cartTotal.toString());
+      sessionStorage.setItem("latestPaymentMethod", paymentMethod || "cod");
       
-      // Clear the cart
-      useCartStore.getState().clearCart();
+      // Clear the cart (handled in parent page.tsx to avoid redirect race conditions)
+      // useCartStore.getState().clearCart();
 
       onPlaceOrder();
     } catch (error) {

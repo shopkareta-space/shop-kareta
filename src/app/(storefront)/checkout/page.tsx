@@ -21,17 +21,19 @@ export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isMounted, setIsMounted] = useState(false);
 
+  const [isOrderPlaced, setIsOrderPlaced] = useState(false);
+
   useEffect(() => {
     const timer = setTimeout(() => setIsMounted(true), 0);
     return () => clearTimeout(timer);
   }, []);
 
-  // Redirect to cart if empty
+  // Redirect to cart if empty (unless order was just placed)
   useEffect(() => {
-    if (isMounted && cartItems.length === 0) {
+    if (isMounted && cartItems.length === 0 && !isOrderPlaced) {
       router.replace("/cart");
     }
-  }, [isMounted, cartItems.length, router]);
+  }, [isMounted, cartItems.length, router, isOrderPlaced]);
 
   if (!isMounted || cartItems.length === 0) {
     return (
@@ -46,8 +48,9 @@ export default function CheckoutPage() {
   const editStep = (step: number) => setCurrentStep(step);
 
   const handlePlaceOrder = () => {
-    // In a real app, API call goes here
-    clearCart();
+    setIsOrderPlaced(true);
+    // In a real app, API call goes here (handled in OrderReview now)
+    
     // clearCheckout(); // Might want to keep address for next time, but clear it for now
     router.push("/checkout/success");
   };

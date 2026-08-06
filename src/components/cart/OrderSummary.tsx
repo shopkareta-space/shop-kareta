@@ -6,8 +6,10 @@ import { useCartStore } from "@/store/cartStore";
 import { premiumSpring, fadeUp, staggerContainer } from "@/lib/motion";
 import { ShippingEstimator } from "./ShippingEstimator";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export function OrderSummary() {
+  const router = useRouter();
   const items = useCartStore((state) => state.items);
   const coupon = useCartStore((state) => state.coupon);
   const applyCoupon = useCartStore((state) => state.applyCoupon);
@@ -16,6 +18,7 @@ export function OrderSummary() {
   const [couponCode, setCouponCode] = useState("");
   const [isApplying, setIsApplying] = useState(false);
   const [couponError, setCouponError] = useState("");
+  const [isValidating, setIsValidating] = useState(false);
 
   const subtotal = items.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
   const discount = coupon ? (subtotal * coupon.discountPercent) / 100 : 0;
@@ -41,6 +44,37 @@ export function OrderSummary() {
       setCouponError("Invalid or expired coupon code.");
     } else {
       setCouponCode("");
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (items.length === 0) return;
+    
+    setIsValidating(true);
+    try {
+      const res = await fetch("/api/cart/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items }),
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok || !data.success) {
+        if (data.issues && data.issues.length > 0) {
+          alert("Please update your cart:\n\n" + data.issues.join("\n"));
+        } else {
+          alert(data.error || "Failed to validate cart");
+        }
+        return;
+      }
+      
+      router.push("/checkout");
+    } catch (error) {
+      console.error("Cart validation error:", error);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setIsValidating(false);
     }
   };
 
@@ -150,12 +184,20 @@ export function OrderSummary() {
       {/* Checkout Action */}
       <motion.div variants={fadeUp}>
         <motion.button
+          onClick={handleCheckout}
+          disabled={isValidating || items.length === 0}
           whileTap={{ scale: 0.98 }}
           transition={premiumSpring}
-          className="w-full h-14 bg-brand-green text-white rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-[#0c593a] hover:shadow-lg hover:shadow-brand-green/20 transition-all mb-4"
+          className="w-full h-14 bg-brand-green text-white rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-[#0c593a] hover:shadow-lg hover:shadow-brand-green/20 transition-all mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span>Proceed to Checkout</span>
-          <ArrowRight className="w-5 h-5" />
+          {isValidating ? (
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <>
+              <span>Proceed to Checkout</span>
+              <ArrowRight className="w-5 h-5" />
+            </>
+          )}
         </motion.button>
       </motion.div>
 

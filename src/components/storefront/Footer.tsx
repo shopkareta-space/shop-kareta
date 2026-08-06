@@ -53,6 +53,9 @@ export default function Footer() {
                 <Link href="/categories" className="text-brand-light/80 hover:text-brand-light text-sm transition-colors">Categories</Link>
               </li>
               <li>
+                <Link href="/track" className="text-brand-light/80 hover:text-brand-light text-sm transition-colors">Track Order</Link>
+              </li>
+              <li>
                 <Link href="/about" className="text-brand-light/80 hover:text-brand-light text-sm transition-colors">About Us</Link>
               </li>
               <li>

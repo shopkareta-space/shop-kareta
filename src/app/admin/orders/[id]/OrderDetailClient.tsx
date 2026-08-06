@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Printer, FileText, Package, Truck, CheckCircle, Clock, MapPin, CreditCard, ChevronRight } from "lucide-react";
+import { ArrowLeft, Printer, FileText, Package, Truck, CheckCircle, Clock, MapPin, CreditCard, ChevronRight, Activity } from "lucide-react";
 import Image from "next/image";
 import { updateOrderStatus, updatePaymentStatus, updateOrderShipping, updateOrderNotes } from "@/lib/services/admin-order.service";
 import { useSearchParams } from "next/navigation";
@@ -11,6 +11,7 @@ export default function OrderDetailClient({ initialOrder }: { initialOrder: any 
   const [order, setOrder] = useState(initialOrder);
   const searchParams = useSearchParams();
   const isPrint = searchParams.get('print') === 'true';
+  const isPackingSlip = searchParams.get('packing_slip') === 'true';
 
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [shippingUpdating, setShippingUpdating] = useState(false);
@@ -27,19 +28,18 @@ export default function OrderDetailClient({ initialOrder }: { initialOrder: any 
   });
 
   useEffect(() => {
-    if (isPrint) {
+    if (isPrint || isPackingSlip) {
       setTimeout(() => {
         window.print();
       }, 500);
     }
-  }, [isPrint]);
+  }, [isPrint, isPackingSlip]);
 
   const handleStatusUpdate = async (newStatus: string) => {
     try {
       setStatusUpdating(true);
       await updateOrderStatus(order.id, newStatus);
       setOrder({ ...order, status: newStatus });
-      // Reload to get new timeline history
       window.location.reload();
     } catch (error: any) {
       alert(error.message);
@@ -52,6 +52,7 @@ export default function OrderDetailClient({ initialOrder }: { initialOrder: any 
     try {
       await updatePaymentStatus(order.id, newStatus);
       setOrder({ ...order, payment_status: newStatus });
+      window.location.reload();
     } catch (error: any) {
       alert(error.message);
     }
@@ -63,6 +64,7 @@ export default function OrderDetailClient({ initialOrder }: { initialOrder: any 
       await updateOrderShipping(order.id, shippingData);
       setOrder({ ...order, ...shippingData });
       alert("Shipping info updated!");
+      window.location.reload();
     } catch (error: any) {
       alert(error.message);
     } finally {
@@ -74,17 +76,18 @@ export default function OrderDetailClient({ initialOrder }: { initialOrder: any 
     try {
       await updateOrderNotes(order.id, notes);
       alert("Notes updated!");
+      window.location.reload();
     } catch (error: any) {
       alert(error.message);
     }
   };
 
-  if (isPrint) {
+  if (isPrint || isPackingSlip) {
     return (
       <div className="bg-white p-8 max-w-4xl mx-auto text-black">
         <div className="flex justify-between items-start border-b pb-6 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-[#0D1B2A]">INVOICE</h1>
+            <h1 className="text-3xl font-bold text-[#0D1B2A]">{isPackingSlip ? 'PACKING SLIP' : 'INVOICE'}</h1>
             <p className="text-gray-500 mt-1">Order #{order.id.split('-')[0].toUpperCase()}</p>
             <p className="text-sm text-gray-500">Date: {new Date(order.created_at).toLocaleDateString()}</p>
           </div>
@@ -119,8 +122,8 @@ export default function OrderDetailClient({ initialOrder }: { initialOrder: any 
             <tr>
               <th className="py-3 text-left text-sm font-semibold text-gray-600 uppercase">Item</th>
               <th className="py-3 text-center text-sm font-semibold text-gray-600 uppercase">Qty</th>
-              <th className="py-3 text-right text-sm font-semibold text-gray-600 uppercase">Price</th>
-              <th className="py-3 text-right text-sm font-semibold text-gray-600 uppercase">Total</th>
+              {!isPackingSlip && <th className="py-3 text-right text-sm font-semibold text-gray-600 uppercase">Price</th>}
+              {!isPackingSlip && <th className="py-3 text-right text-sm font-semibold text-gray-600 uppercase">Total</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -131,50 +134,61 @@ export default function OrderDetailClient({ initialOrder }: { initialOrder: any 
                   {item.variant_name && <p className="text-sm text-gray-500">{item.variant_name}</p>}
                 </td>
                 <td className="py-4 text-center text-gray-600">{item.quantity}</td>
-                <td className="py-4 text-right text-gray-600">₹{Number(item.price).toFixed(2)}</td>
-                <td className="py-4 text-right font-medium text-gray-900">₹{(Number(item.price) * item.quantity).toFixed(2)}</td>
+                {!isPackingSlip && <td className="py-4 text-right text-gray-600">₹{Number(item.price).toFixed(2)}</td>}
+                {!isPackingSlip && <td className="py-4 text-right font-medium text-gray-900">₹{(Number(item.price) * item.quantity).toFixed(2)}</td>}
               </tr>
             ))}
           </tbody>
         </table>
 
-        <div className="flex justify-end">
-          <div className="w-64 space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Subtotal</span>
-              <span className="font-medium text-gray-900">₹{Number(order.total_amount).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Shipping</span>
-              <span className="font-medium text-gray-900">₹0.00</span>
-            </div>
-            <div className="flex justify-between text-lg font-bold border-t pt-3">
-              <span className="text-gray-900">Total</span>
-              <span className="text-[#0D1B2A]">₹{Number(order.total_amount).toFixed(2)}</span>
+        {!isPackingSlip && (
+          <div className="flex justify-end">
+            <div className="w-64 space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Subtotal</span>
+                <span className="font-medium text-gray-900">₹{Number(order.total_amount).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Shipping</span>
+                <span className="font-medium text-gray-900">₹0.00</span>
+              </div>
+              <div className="flex justify-between text-lg font-bold border-t pt-3">
+                <span className="text-gray-900">Total</span>
+                <span className="text-[#0D1B2A]">₹{Number(order.total_amount).toFixed(2)}</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     );
   }
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case 'processing': return 'bg-blue-100 text-blue-800';
-      case 'shipped': return 'bg-purple-100 text-purple-800';
+      case 'pending':
+      case 'placed': return 'bg-blue-100 text-blue-800';
+      case 'processing': return 'bg-amber-100 text-amber-800';
+      case 'packed': return 'bg-purple-100 text-purple-800';
+      case 'shipped': return 'bg-indigo-100 text-indigo-800';
       case 'delivered': return 'bg-green-100 text-green-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const nextStatusOptions: any = {
     'pending': ['processing', 'cancelled'],
-    'processing': ['shipped', 'cancelled'],
+    'placed': ['processing', 'cancelled'],
+    'processing': ['packed', 'cancelled'],
+    'packed': ['shipped', 'cancelled'],
     'shipped': ['delivered', 'cancelled'],
     'delivered': ['cancelled'],
     'cancelled': []
   };
+
+  // Separate order timeline (status changes only) from full audit log
+  const statusHistory = order.order_status_history?.filter((h: any) => h.previous_status !== 'same') || [];
+  const fullAuditLog = order.order_status_history || [];
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-20">
@@ -193,9 +207,12 @@ export default function OrderDetailClient({ initialOrder }: { initialOrder: any 
           <p className="text-sm text-gray-500 mt-1">{new Date(order.created_at).toLocaleString()}</p>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={() => window.open(`?print=true`, '_blank')} className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
-            <Printer className="w-4 h-4 mr-2" /> Print Invoice
+          <button onClick={() => window.open(`?packing_slip=true`, '_blank')} className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
+            <Package className="w-4 h-4 mr-2" /> Print Packing Slip
           </button>
+          <Link href={`/invoice/${order.id}`} target="_blank" className="inline-flex items-center px-4 py-2 bg-[#0D1B2A] border border-transparent text-white rounded-xl text-sm font-medium hover:bg-opacity-90 transition-colors">
+            <Printer className="w-4 h-4 mr-2" /> Download Invoice PDF
+          </Link>
         </div>
       </div>
 
@@ -206,8 +223,8 @@ export default function OrderDetailClient({ initialOrder }: { initialOrder: any 
           
           {/* Order Items */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/50">
-              <h3 className="font-semibold text-gray-900">Ordered Items</h3>
+            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+              <h3 className="font-semibold text-gray-900">Ordered Items ({order.order_items?.length || 0})</h3>
             </div>
             <div className="divide-y divide-gray-100">
               {order.order_items?.map((item: any) => (
@@ -254,23 +271,71 @@ export default function OrderDetailClient({ initialOrder }: { initialOrder: any 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="font-semibold text-gray-900 mb-6">Order Timeline</h3>
             <div className="relative border-l-2 border-gray-100 pl-6 space-y-8 ml-3">
-              {order.order_status_history?.map((history: any, index: number) => (
-                <div key={history.id} className="relative">
-                  <div className="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-[#0D1B2A] border-4 border-white shadow-sm" />
-                  <p className="text-xs font-medium text-gray-500 uppercase">{new Date(history.created_at).toLocaleString()}</p>
-                  <p className="text-sm font-medium text-gray-900 mt-1">
-                    Status changed to <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider ${getStatusColor(history.new_status)}`}>{history.new_status}</span>
-                  </p>
-                  {history.comment && <p className="text-sm text-gray-600 mt-1 bg-gray-50 p-2 rounded-lg inline-block border border-gray-100">{history.comment}</p>}
-                </div>
-              ))}
+              {statusHistory.map((history: any, index: number) => {
+                const date = new Date(history.created_at);
+                // Try to extract admin email if present (usually appended in parentheses)
+                const adminMatch = history.comment?.match(/\(by (.*?)\)/);
+                const adminEmail = adminMatch ? adminMatch[1] : 'System';
+                
+                return (
+                  <div key={history.id} className="relative">
+                    <div className="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-[#0D1B2A] border-4 border-white shadow-sm" />
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          Status changed to <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase ${getStatusColor(history.new_status)}`}>{history.new_status}</span>
+                        </p>
+                        <p className="text-xs font-medium text-gray-500 mt-1">
+                          {date.toLocaleDateString()} at {date.toLocaleTimeString()} • <span className="text-blue-600">{adminEmail}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
               
               {/* Initial Event */}
               <div className="relative">
                 <div className="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-gray-300 border-4 border-white shadow-sm" />
-                <p className="text-xs font-medium text-gray-500 uppercase">{new Date(order.created_at).toLocaleString()}</p>
-                <p className="text-sm font-medium text-gray-900 mt-1">Order Placed</p>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Order Placed</p>
+                    <p className="text-xs font-medium text-gray-500 mt-1">
+                      {new Date(order.created_at).toLocaleDateString()} at {new Date(order.created_at).toLocaleTimeString()} • Customer
+                    </p>
+                  </div>
+                </div>
               </div>
+            </div>
+          </div>
+
+          {/* Audit Log */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-gray-500" />
+              <h3 className="font-semibold text-gray-900">Audit Log</h3>
+            </div>
+            <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+              {fullAuditLog.map((log: any) => {
+                const date = new Date(log.created_at);
+                return (
+                  <div key={log.id} className="p-4 hover:bg-gray-50 transition-colors">
+                    <p className="text-sm text-gray-900 font-medium">{log.comment}</p>
+                    <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                      <span>{date.toLocaleDateString()} {date.toLocaleTimeString()}</span>
+                      {log.previous_status !== 'same' && (
+                        <>
+                          <span>•</span>
+                          <span>{log.previous_status} → {log.new_status}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              {fullAuditLog.length === 0 && (
+                <div className="p-4 text-center text-sm text-gray-500">No activity logged yet.</div>
+              )}
             </div>
           </div>
 
@@ -347,6 +412,7 @@ export default function OrderDetailClient({ initialOrder }: { initialOrder: any 
                   <option value="pending">Pending</option>
                   <option value="paid">Paid</option>
                   <option value="failed">Failed</option>
+                  <option value="cod">COD</option>
                 </select>
               </div>
             </div>

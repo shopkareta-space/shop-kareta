@@ -6,12 +6,13 @@ import { updateStoreSetting } from "@/lib/services/admin-settings.service";
 import { MediaPickerModal } from "@/components/admin/MediaPickerModal";
 import Image from "next/image";
 
-type Tab = 'general' | 'business' | 'shipping' | 'social' | 'seo' | 'footer';
+type Tab = 'general' | 'business' | 'shipping' | 'social' | 'seo' | 'footer' | 'email';
 
 export default function SettingsClient({ initialSettings }: { initialSettings: Record<string, any> }) {
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [settings, setSettings] = useState(initialSettings);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTestingEmail, setIsTestingEmail] = useState(false);
   
   // Media Picker state
   const [mediaPickerConfig, setMediaPickerConfig] = useState<{isOpen: boolean, target: string} | null>(null);
@@ -44,8 +45,30 @@ export default function SettingsClient({ initialSettings }: { initialSettings: R
     { id: 'shipping', label: 'Shipping', icon: Truck },
     { id: 'social', label: 'Social Media', icon: Share2 },
     { id: 'seo', label: 'Global SEO', icon: Search },
-    { id: 'footer', label: 'Footer', icon: Layout }
+    { id: 'footer', label: 'Footer', icon: Layout },
+    { id: 'email', label: 'Email', icon: Share2 } // Reusing Share2 or another icon
   ];
+
+  const handleTestEmail = async () => {
+    const testEmailAddress = prompt("Enter an email address to send the test email to:");
+    if (!testEmailAddress) return;
+    
+    setIsTestingEmail(true);
+    try {
+      const res = await fetch("/api/admin/test-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: testEmailAddress })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send");
+      alert("Test email queued successfully! Check the email logs.");
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsTestingEmail(false);
+    }
+  };
 
   return (
     <div className="flex flex-col md:flex-row gap-6">
@@ -365,6 +388,84 @@ export default function SettingsClient({ initialSettings }: { initialSettings: R
               <div className="pt-4 flex justify-end border-t border-gray-100">
                 <button 
                   onClick={() => handleSave('footer')}
+                  disabled={isSaving}
+                  className="inline-flex items-center px-6 py-2.5 bg-[#0D1B2A] text-white rounded-xl text-sm font-medium hover:bg-[#1a3553] transition-colors"
+                >
+                  <Save className="w-4 h-4 mr-2" /> Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Email Settings */}
+        {activeTab === 'email' && (
+          <div className="p-6 space-y-6">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-4">
+              <h3 className="text-lg font-bold text-gray-900">Email Configuration</h3>
+              <a href="/admin/settings/email/logs" className="text-sm font-semibold text-blue-600 hover:underline">
+                View Email Logs &rarr;
+              </a>
+            </div>
+            
+            <div className="space-y-4 max-w-2xl">
+              <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-xl p-4 text-sm mb-4">
+                <strong>Note:</strong> Email Provider is controlled by the <code>EMAIL_PROVIDER</code> environment variable. 
+                Other settings below are used by the Notification Service when sending emails.
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Provider (from Environment)</label>
+                <input 
+                  type="text" 
+                  value={process.env.NEXT_PUBLIC_EMAIL_PROVIDER || 'resend'}
+                  disabled
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Sender Name</label>
+                <input 
+                  type="text" 
+                  value={settings.email_config?.sender_name || 'Shop Kareta'}
+                  onChange={e => handleUpdate('email_config', 'sender_name', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0D1B2A]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Sender Email</label>
+                <p className="text-xs text-gray-500 mb-2">Must be verified with your provider.</p>
+                <input 
+                  type="email" 
+                  value={settings.email_config?.sender_email || 'orders@shopkareta.com'}
+                  onChange={e => handleUpdate('email_config', 'sender_email', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0D1B2A]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reply-To Email</label>
+                <input 
+                  type="email" 
+                  value={settings.email_config?.reply_to || 'support@shopkareta.com'}
+                  onChange={e => handleUpdate('email_config', 'reply_to', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0D1B2A]"
+                />
+              </div>
+
+              <div className="pt-4 flex justify-between border-t border-gray-100">
+                <button 
+                  onClick={handleTestEmail}
+                  disabled={isTestingEmail}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
+                >
+                  {isTestingEmail ? 'Sending...' : 'Send Test Email'}
+                </button>
+
+                <button 
+                  onClick={() => handleSave('email_config')}
                   disabled={isSaving}
                   className="inline-flex items-center px-6 py-2.5 bg-[#0D1B2A] text-white rounded-xl text-sm font-medium hover:bg-[#1a3553] transition-colors"
                 >

@@ -1,0 +1,1 @@
+{"contact":{"firstName":"Test","lastName":"User","email":"test@test.com","phone":"9999999999"},"shippingAddress":{"addressLine1":"123 Test St","city":"Test City","state":"TS","pincode":"111111"},"deliveryMethod":"standard","paymentMethod":"cod","items":[{"productId":"satvam-wellness-calcium-k2-capsules","name":"Calcium","quantity":1,"price":100}],"totalAmount":100}

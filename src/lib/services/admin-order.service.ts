@@ -2,13 +2,24 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { Resend } from "resend";
 import React from "react";
-import { OrderConfirmationEmail } from "@/components/emails/OrderConfirmationEmail";
+import { notificationService } from "@/lib/notifications/email/services/NotificationService";
 
-const resend = new Resend(process.env.RESEND_API_KEY || 'mock_key');
+// Helper to get current admin email for logging
+async function getAdminEmail() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.email || "System/Unknown Admin";
+}
 
-export async function getAdminOrders(filters?: { status?: string, payment_status?: string, search?: string }) {
+export async function getAdminOrders(filters?: { 
+  status?: string, 
+  payment_status?: string, 
+  search?: string,
+  date_range?: string,
+  custom_start?: string,
+  custom_end?: string
+}) {
   const supabase = await createClient();
   
   let query = supabase
@@ -26,6 +37,24 @@ export async function getAdminOrders(filters?: { status?: string, payment_status
 
   if (filters?.payment_status && filters.payment_status !== "all") {
     query = query.eq("payment_status", filters.payment_status);
+  }
+
+  if (filters?.date_range) {
+    const today = new Date();
+    if (filters.date_range === 'today') {
+      today.setHours(0, 0, 0, 0);
+      query = query.gte("created_at", today.toISOString());
+    } else if (filters.date_range === '7days') {
+      const last7 = new Date();
+      last7.setDate(last7.getDate() - 7);
+      query = query.gte("created_at", last7.toISOString());
+    } else if (filters.date_range === '30days') {
+      const last30 = new Date();
+      last30.setDate(last30.getDate() - 30);
+      query = query.gte("created_at", last30.toISOString());
+    } else if (filters.date_range === 'custom' && filters.custom_start && filters.custom_end) {
+      query = query.gte("created_at", filters.custom_start).lte("created_at", filters.custom_end);
+    }
   }
 
   // Very basic search simulation (JSONB searching requires specific syntaxes in Supabase but we'll try)
@@ -73,6 +102,12 @@ export async function getAdminOrder(id: string) {
     console.error("Error fetching order:", error);
     return null;
   }
+  
+  // Sort history newest first
+  if (data.order_status_history) {
+    data.order_status_history.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
+  
   return data;
 }
 
@@ -81,7 +116,7 @@ export async function getOrderStats() {
   
   const { data, error } = await supabase
     .from("orders")
-    .select("status, total_amount")
+    .select("status, total_amount, created_at")
     .eq("is_archived", false);
 
   if (error) {
@@ -93,32 +128,46 @@ export async function getOrderStats() {
     total: data.length,
     pending: 0,
     processing: 0,
+    packed: 0,
     shipped: 0,
     delivered: 0,
     cancelled: 0,
-    revenue: 0
+    revenue: 0,
+    today_revenue: 0,
+    avg_order_value: 0
   };
+
+  const todayStr = new Date().toISOString().split('T')[0];
 
   data.forEach((order: any) => {
     if (order.status === 'pending') stats.pending++;
     if (order.status === 'processing') stats.processing++;
+    if (order.status === 'packed') stats.packed++;
     if (order.status === 'shipped') stats.shipped++;
-    if (order.status === 'delivered') {
-      stats.delivered++;
-      stats.revenue += Number(order.total_amount || 0); // Only count delivered revenue? Or processing? We'll count all non-cancelled.
-    }
+    if (order.status === 'delivered') stats.delivered++;
     if (order.status === 'cancelled') stats.cancelled++;
     
-    if (order.status !== 'cancelled' && order.status !== 'delivered') {
-       stats.revenue += Number(order.total_amount || 0);
+    if (order.status !== 'cancelled') {
+       const amount = Number(order.total_amount || 0);
+       stats.revenue += amount;
+       
+       if (order.created_at && order.created_at.startsWith(todayStr)) {
+         stats.today_revenue += amount;
+       }
     }
   });
+  
+  const nonCancelledCount = data.length - stats.cancelled;
+  if (nonCancelledCount > 0) {
+    stats.avg_order_value = stats.revenue / nonCancelledCount;
+  }
 
   return stats;
 }
 
 export async function updateOrderStatus(id: string, newStatus: string, comment?: string) {
   const supabase = await createClient();
+  const adminEmail = await getAdminEmail();
   
   // 1. Get current order
   const { data: order } = await supabase.from("orders").select("status").eq("id", id).single();
@@ -126,12 +175,15 @@ export async function updateOrderStatus(id: string, newStatus: string, comment?:
 
   const prevStatus = order.status;
   
+  if (prevStatus === newStatus) return; // No change
+  
   // Validation (Prevent invalid transitions)
   const validTransitions: any = {
     'pending': ['processing', 'cancelled'],
-    'processing': ['shipped', 'cancelled'],
+    'processing': ['packed', 'cancelled'],
+    'packed': ['shipped', 'cancelled'],
     'shipped': ['delivered', 'cancelled'],
-    'delivered': ['cancelled'], // Sometimes returns/refunds map to cancelled or a new status
+    'delivered': ['cancelled'],
     'cancelled': []
   };
 
@@ -175,38 +227,27 @@ export async function updateOrderStatus(id: string, newStatus: string, comment?:
     }
   }
 
-  // Send shipping notification email if shipped
-  if (newStatus === "shipped") {
+  // Send status notification email
+  if (["processing", "packed", "shipped", "delivered", "cancelled"].includes(newStatus)) {
     const { data: fullOrder } = await supabase
       .from("orders")
-      .select("*, order_items(*)")
+      .select("*")
       .eq("id", id)
       .single();
       
-    if (fullOrder && fullOrder.contact_info?.email && process.env.RESEND_API_KEY) {
-      const deliveryId = `SK-${fullOrder.id.substring(0, 8).toUpperCase()}`;
+    if (fullOrder && fullOrder.contact_info?.email) {
       try {
-        await resend.emails.send({
-          from: "Shopkareta <orders@shopkareta.com>",
-          to: [fullOrder.contact_info.email],
-          subject: `Your order #${deliveryId} has been shipped!`,
-          // We reuse OrderConfirmationEmail for now, passing shipped text in subject
-          react: React.createElement(OrderConfirmationEmail, {
-            customerName: fullOrder.contact_info.firstName,
-            orderId: fullOrder.id,
-            deliveryId,
-            totalAmount: fullOrder.total_amount,
-            shippingAddress: fullOrder.shipping_address,
-            items: fullOrder.order_items.map((i: any) => ({
-              name: i.product_name,
-              quantity: i.quantity,
-              price: i.price,
-              image: i.image
-            }))
-          }),
-        });
+        await notificationService.sendOrderStatus(
+          fullOrder.contact_info.email,
+          fullOrder.contact_info.name || fullOrder.contact_info.firstName,
+          fullOrder.id,
+          newStatus,
+          fullOrder.tracking_number,
+          fullOrder.courier_name,
+          fullOrder.tracking_url
+        );
       } catch (err) {
-        console.error("Failed to send shipping email", err);
+        console.error("Failed to queue status email", err);
       }
     }
   }
@@ -218,22 +259,46 @@ export async function updateOrderStatus(id: string, newStatus: string, comment?:
       order_id: id,
       previous_status: prevStatus,
       new_status: newStatus,
-      comment: comment || `Status updated from ${prevStatus} to ${newStatus}`
+      comment: (comment || `Status updated from ${prevStatus} to ${newStatus}`) + ` (by ${adminEmail})`
     }]);
 
   revalidatePath(`/admin/orders/${id}`);
   revalidatePath(`/admin/orders`);
 }
 
+export async function bulkUpdateOrderStatus(ids: string[], newStatus: string) {
+  if (!ids || ids.length === 0) return;
+  for (const id of ids) {
+    try {
+      await updateOrderStatus(id, newStatus, `Bulk status update`);
+    } catch (err: any) {
+      console.error(`Failed to bulk update order ${id}: ${err.message}`);
+    }
+  }
+}
+
 export async function updatePaymentStatus(id: string, paymentStatus: string) {
   const supabase = await createClient();
+  const adminEmail = await getAdminEmail();
   
+  const { data: order } = await supabase.from("orders").select("payment_status").eq("id", id).single();
+  const prevStatus = order?.payment_status || 'unknown';
+
   const { error } = await supabase
     .from("orders")
     .update({ payment_status: paymentStatus })
     .eq("id", id);
     
   if (error) throw error;
+  
+  await supabase
+    .from("order_status_history")
+    .insert([{
+      order_id: id,
+      previous_status: prevStatus,
+      new_status: paymentStatus,
+      comment: `Payment status updated from ${prevStatus} to ${paymentStatus} (by ${adminEmail})`
+    }]);
 
   revalidatePath(`/admin/orders/${id}`);
   revalidatePath(`/admin/orders`);
@@ -241,6 +306,7 @@ export async function updatePaymentStatus(id: string, paymentStatus: string) {
 
 export async function updateOrderShipping(id: string, payload: { courier_name?: string, tracking_number?: string, tracking_url?: string, estimated_delivery?: string }) {
   const supabase = await createClient();
+  const adminEmail = await getAdminEmail();
   
   const { error } = await supabase
     .from("orders")
@@ -248,12 +314,22 @@ export async function updateOrderShipping(id: string, payload: { courier_name?: 
     .eq("id", id);
     
   if (error) throw error;
+  
+  await supabase
+    .from("order_status_history")
+    .insert([{
+      order_id: id,
+      previous_status: 'same',
+      new_status: 'same',
+      comment: `Shipping information updated (by ${adminEmail})`
+    }]);
 
   revalidatePath(`/admin/orders/${id}`);
 }
 
 export async function updateOrderNotes(id: string, payload: { admin_notes?: string }) {
   const supabase = await createClient();
+  const adminEmail = await getAdminEmail();
   
   const { error } = await supabase
     .from("orders")
@@ -261,12 +337,22 @@ export async function updateOrderNotes(id: string, payload: { admin_notes?: stri
     .eq("id", id);
     
   if (error) throw error;
+  
+  await supabase
+    .from("order_status_history")
+    .insert([{
+      order_id: id,
+      previous_status: 'same',
+      new_status: 'same',
+      comment: `Admin notes updated (by ${adminEmail})`
+    }]);
 
   revalidatePath(`/admin/orders/${id}`);
 }
 
 export async function archiveOrder(id: string) {
   const supabase = await createClient();
+  const adminEmail = await getAdminEmail();
   
   const { error } = await supabase
     .from("orders")
@@ -274,6 +360,16 @@ export async function archiveOrder(id: string) {
     .eq("id", id);
     
   if (error) throw error;
+  
+  await supabase
+    .from("order_status_history")
+    .insert([{
+      order_id: id,
+      previous_status: 'same',
+      new_status: 'archived',
+      comment: `Order archived (by ${adminEmail})`
+    }]);
 
   revalidatePath(`/admin/orders`);
 }
+
