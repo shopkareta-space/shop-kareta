@@ -28,12 +28,15 @@ export default function CheckoutPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Redirect to cart if empty (unless order was just placed)
+  // Redirect to cart if empty on initial load
   useEffect(() => {
-    if (isMounted && cartItems.length === 0 && !isOrderPlaced) {
-      router.replace("/cart");
+    if (isMounted) {
+      // Use getState to avoid subscribing to cart changes which causes race conditions during success redirect
+      if (useCartStore.getState().items.length === 0 && !isOrderPlaced) {
+        router.replace("/cart");
+      }
     }
-  }, [isMounted, cartItems.length, router, isOrderPlaced]);
+  }, [isMounted, router]);
 
   if (!isMounted || cartItems.length === 0) {
     return (
