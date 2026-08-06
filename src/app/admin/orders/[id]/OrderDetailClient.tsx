@@ -186,6 +186,11 @@ export default function OrderDetailClient({ initialOrder }: { initialOrder: any 
     'cancelled': []
   };
 
+  const getStatusLabel = (status: string) => {
+    if (status === 'shipped') return 'Out for Delivery';
+    return status;
+  };
+
   // Separate order timeline (status changes only) from full audit log
   const statusHistory = order.order_status_history?.filter((h: any) => h.previous_status !== 'same') || [];
   const fullAuditLog = order.order_status_history || [];
@@ -201,7 +206,7 @@ export default function OrderDetailClient({ initialOrder }: { initialOrder: any 
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-gray-900 font-heading">Order #{order.id.split('-')[0].toUpperCase()}</h1>
             <span className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${getStatusColor(order.status)}`}>
-              {order.status}
+              {getStatusLabel(order.status)}
             </span>
           </div>
           <p className="text-sm text-gray-500 mt-1">{new Date(order.created_at).toLocaleString()}</p>
@@ -283,7 +288,7 @@ export default function OrderDetailClient({ initialOrder }: { initialOrder: any 
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="text-sm font-medium text-gray-900">
-                          Status changed to <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase ${getStatusColor(history.new_status)}`}>{history.new_status}</span>
+                          Status changed to <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase ${getStatusColor(history.new_status)}`}>{getStatusLabel(history.new_status)}</span>
                         </p>
                         <p className="text-xs font-medium text-gray-500 mt-1">
                           {date.toLocaleDateString()} at {date.toLocaleTimeString()} • <span className="text-blue-600">{adminEmail}</span>
@@ -355,7 +360,7 @@ export default function OrderDetailClient({ initialOrder }: { initialOrder: any 
                   disabled={statusUpdating}
                   className="flex-1 min-w-[120px] py-2 px-3 text-sm font-medium bg-gray-50 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors capitalize text-center"
                 >
-                  Mark as {status}
+                  Mark as {getStatusLabel(status)}
                 </button>
               ))}
               {nextStatusOptions[order.status]?.length === 0 && (

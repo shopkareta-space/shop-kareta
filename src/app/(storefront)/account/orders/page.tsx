@@ -175,7 +175,7 @@ export default function OrdersPage() {
                     : "bg-brand-gray/5 text-brand-gray hover:bg-brand-gray/10 hover:text-brand-blue"
                 }`}
               >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
+                {status === "shipped" ? "Out for Delivery" : status.charAt(0).toUpperCase() + status.slice(1)}
               </button>
             ))}
           </div>

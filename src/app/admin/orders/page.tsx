@@ -2,6 +2,9 @@ import { getAdminOrders, getOrderStats } from "@/lib/services/admin-order.servic
 import OrderListClient from "./OrderListClient";
 import { Package, Truck, CheckCircle, XCircle, Clock, DollarSign } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function AdminOrdersPage() {
   const [orders, stats] = await Promise.all([
     getAdminOrders(),

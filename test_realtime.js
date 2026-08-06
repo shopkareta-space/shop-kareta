@@ -4,17 +4,7 @@ async function run() {
   await client.connect();
   try {
     const res = await client.query(`
-      DO $$
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 
-          FROM pg_publication_tables 
-          WHERE pubname = 'supabase_realtime' AND tablename = 'orders'
-        ) THEN
-          ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
-        END IF;
-      END
-      $$;
+      ALTER TYPE public.order_status ADD VALUE IF NOT EXISTS 'out_for_delivery' AFTER 'packed';
     `);
     console.log("Success", res);
   } catch (err) {

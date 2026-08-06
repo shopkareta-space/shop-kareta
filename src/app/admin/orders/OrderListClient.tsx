@@ -221,7 +221,7 @@ export default function OrderListClient({ initialOrders }: { initialOrders: any[
                   <optgroup label="Update Status">
                     <option value="status_processing">Mark Processing</option>
                     <option value="status_packed">Mark Packed</option>
-                    <option value="status_shipped">Mark Shipped</option>
+                    <option value="status_shipped">Mark Out for Delivery</option>
                     <option value="status_delivered">Mark Delivered</option>
                     <option value="status_cancelled">Mark Cancelled</option>
                   </optgroup>
@@ -267,7 +267,7 @@ export default function OrderListClient({ initialOrders }: { initialOrders: any[
             <option value="placed">Placed</option>
             <option value="processing">Processing</option>
             <option value="packed">Packed</option>
-            <option value="shipped">Shipped</option>
+            <option value="shipped">Out for Delivery</option>
             <option value="delivered">Delivered</option>
             <option value="cancelled">Cancelled</option>
           </select>
@@ -360,7 +360,7 @@ export default function OrderListClient({ initialOrders }: { initialOrders: any[
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide ${getStatusColor(order.status)}`}>
-                      {order.status}
+                      {order.status === 'shipped' ? 'Out for Delivery' : order.status}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

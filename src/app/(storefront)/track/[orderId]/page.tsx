@@ -11,11 +11,12 @@ const statusConfig = {
   placed: { color: "text-blue-500", bg: "bg-blue-50", border: "border-blue-100", label: "Order Placed" },
   processing: { color: "text-amber-500", bg: "bg-amber-50", border: "border-amber-100", label: "Processing" },
   packed: { color: "text-purple-500", bg: "bg-purple-50", border: "border-purple-100", label: "Packed" },
-  shipped: { color: "text-brand-blue", bg: "bg-brand-blue/5", border: "border-brand-blue/10", label: "Shipped" },
+  shipped: { color: "text-brand-blue", bg: "bg-brand-blue/5", border: "border-brand-blue/10", label: "Out for Delivery" },
   delivered: { color: "text-brand-green", bg: "bg-brand-green/10", border: "border-brand-green/20", label: "Delivered" },
   cancelled: { color: "text-red-500", bg: "bg-red-50", border: "border-red-100", label: "Cancelled" },
 };
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 0; // Dynamic page
 
 export default async function TrackOrderPage({ params }: { params: Promise<{ orderId: string }> }) {
@@ -38,7 +39,7 @@ export default async function TrackOrderPage({ params }: { params: Promise<{ ord
     { id: 'placed', label: 'Order Placed', icon: Box, date: new Date(order.created_at).toLocaleDateString(), time: new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), completed: currentIndex >= 0 || currentStatus === 'cancelled' },
     { id: 'processing', label: 'Processing', icon: Clock, date: currentIndex >= 1 ? 'In Progress' : '', time: '', completed: currentIndex >= 1 },
     { id: 'packed', label: 'Packed', icon: Package, date: currentIndex >= 2 ? 'Ready' : '', time: '', completed: currentIndex >= 2 },
-    { id: 'shipped', label: 'Shipped', icon: Truck, date: currentIndex >= 3 ? 'Dispatched' : '', time: '', completed: currentIndex >= 3 },
+    { id: 'shipped', label: 'Out for Delivery', icon: Truck, date: currentIndex >= 3 ? 'Dispatched' : '', time: '', completed: currentIndex >= 3 },
     { id: 'delivered', label: 'Delivered', icon: CheckCircle2, date: currentIndex >= 4 ? 'Completed' : '', time: '', completed: currentIndex >= 4 }
   ];
 

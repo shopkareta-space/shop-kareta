@@ -7,7 +7,7 @@ const statusConfig = {
   placed: { icon: Clock, color: "text-blue-500", bg: "bg-blue-50", border: "border-blue-100", label: "Placed" },
   processing: { icon: Clock, color: "text-amber-500", bg: "bg-amber-50", border: "border-amber-100", label: "Processing" },
   packed: { icon: Package, color: "text-purple-500", bg: "bg-purple-50", border: "border-purple-100", label: "Packed" },
-  shipped: { icon: Package, color: "text-brand-blue", bg: "bg-brand-blue/5", border: "border-brand-blue/10", label: "Shipped" },
+  shipped: { icon: Package, color: "text-brand-blue", bg: "bg-brand-blue/5", border: "border-brand-blue/10", label: "Out for Delivery" },
   delivered: { icon: CheckCircle2, color: "text-brand-green", bg: "bg-brand-green/10", border: "border-brand-green/20", label: "Delivered" },
   cancelled: { icon: XCircle, color: "text-red-500", bg: "bg-red-50", border: "border-red-100", label: "Cancelled" },
 };
