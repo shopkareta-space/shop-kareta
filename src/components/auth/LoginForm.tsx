@@ -54,49 +54,57 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <div>
-        <label className="block text-sm font-medium text-[#0D1B2A] mb-1.5">Email Address</label>
+        <label htmlFor="email" className="block text-sm font-medium text-[#0D1B2A] mb-1.5">Email Address</label>
         <input
+          id="email"
           {...register("email")}
           type="email"
           placeholder="you@example.com"
-          className="w-full px-4 py-3 rounded-xl border border-brand-gray/20 focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green transition-colors bg-white text-[#0D1B2A] placeholder:text-gray-400"
+          aria-invalid={errors.email ? "true" : "false"}
+          aria-describedby={errors.email ? "email-error" : undefined}
+          className="w-full px-4 py-3 rounded-xl border border-brand-gray/20 focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green transition-colors bg-white text-[#0D1B2A] placeholder:text-gray-400 scroll-m-20"
         />
         {errors.email && (
-          <p className="mt-1.5 text-sm text-red-500 font-medium">{errors.email.message}</p>
+          <p id="email-error" role="alert" className="mt-1.5 text-sm text-red-500 font-medium">{errors.email.message}</p>
         )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[#0D1B2A] mb-1.5">Password</label>
+        <label htmlFor="password" className="block text-sm font-medium text-[#0D1B2A] mb-1.5">Password</label>
         <div className="relative">
           <input
+            id="password"
             {...register("password")}
             type={showPassword ? "text" : "password"}
             placeholder="••••••••"
-            className="w-full px-4 py-3 rounded-xl border border-brand-gray/20 focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green transition-colors bg-white text-[#0D1B2A] placeholder:text-gray-400 pr-12"
+            aria-invalid={errors.password ? "true" : "false"}
+            aria-describedby={errors.password ? "password-error" : undefined}
+            className="w-full px-4 py-3 rounded-xl border border-brand-gray/20 focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green transition-colors bg-white text-[#0D1B2A] placeholder:text-gray-400 pr-12 scroll-m-20"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-gray transition-colors"
-            tabIndex={-1}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-gray transition-colors min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg"
           >
-            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            {showPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
           </button>
         </div>
         {errors.password && (
-          <p className="mt-1.5 text-sm text-red-500 font-medium">{errors.password.message}</p>
+          <p id="password-error" role="alert" className="mt-1.5 text-sm text-red-500 font-medium">{errors.password.message}</p>
         )}
       </div>
 
       <div className="flex items-center justify-between">
-        <label className="flex items-center gap-2 cursor-pointer group">
+        <label htmlFor="rememberMe" className="flex items-center gap-2 cursor-pointer group">
           <input
+            id="rememberMe"
             {...register("rememberMe")}
             type="checkbox"
-            className="w-4 h-4 rounded border-brand-gray/30 text-brand-green focus:ring-brand-green cursor-pointer accent-brand-green"
+            className="w-4 h-4 rounded border-brand-gray/30 text-brand-green focus:ring-brand-green cursor-pointer accent-brand-green min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 sm:w-4 sm:h-4 m-[-14px] sm:m-0"
           />
-          <span className="text-sm text-brand-gray group-hover:text-[#0D1B2A] transition-colors">Remember me</span>
+          <span className="text-sm text-brand-gray group-hover:text-[#0D1B2A] transition-colors ml-3 sm:ml-0">Remember me</span>
         </label>
         <Link 
           href="/forgot-password"
@@ -107,7 +115,7 @@ export function LoginForm() {
       </div>
 
       {errors.root && (
-        <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm font-medium text-center">
+        <div role="alert" aria-live="assertive" className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm font-medium text-center">
           {errors.root.message}
         </div>
       )}
