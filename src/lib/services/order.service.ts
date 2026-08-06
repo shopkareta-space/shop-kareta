@@ -4,7 +4,12 @@ import { createClient } from "@supabase/supabase-js";
 
 // Initialize Supabase admin client here to avoid build-time environment variable errors
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dummy.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dummy'; 
+const supabaseServiceKey = 
+  process.env.SUPABASE_SERVICE_ROLE_KEY || 
+  process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || 
+  process.env.SUPABASE_SERVICE_KEY || 
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
+  'dummy'; 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function getOrderById(orderId: string) {
