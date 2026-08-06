@@ -41,13 +41,17 @@ export default async function InvoiceDocument({ orderId, viewContext }: InvoiceD
     .single();
 
   if (error || !order) {
+    console.error("Invoice Error: Failed to fetch order", { orderId, error });
     return notFound();
   }
 
   // If customer context, verify ownership
   if (viewContext === "customer" && order.user_id !== user.id) {
+    console.error("Invoice Error: Ownership mismatch", { orderUserId: order.user_id, userId: user.id });
     return notFound(); // Return 404 to hide the existence of other orders
   }
+
+  console.log("Invoice successfully fetched for order:", order.id);
 
   // Data processing
   const invoiceNumber = order.order_number || `INV-${order.id.substring(0, 8).toUpperCase()}`;
