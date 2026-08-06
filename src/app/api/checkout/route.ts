@@ -42,10 +42,22 @@ export async function POST(req: Request) {
       throw new Error("Failed to create order");
     }
 
-    // 2. Insert into order_items table
+    // 2. Fetch product UUIDs based on the slugs (items.productId)
+    const slugs = items.map((item: any) => item.productId);
+    const { data: productsData } = await supabase
+      .from('products')
+      .select('id, slug')
+      .in('slug', slugs);
+
+    const productMap = new Map();
+    if (productsData) {
+      productsData.forEach((p: any) => productMap.set(p.slug, p.id));
+    }
+
+    // 3. Insert into order_items table
     const orderItemsToInsert = items.map((item: any) => ({
       order_id: order.id,
-      product_id: item.productId,
+      product_id: productMap.get(item.productId) || null,
       variant_id: item.variantId || null,
       product_name: item.name,
       quantity: item.quantity,
