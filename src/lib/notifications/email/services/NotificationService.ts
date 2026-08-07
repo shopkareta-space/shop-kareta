@@ -11,6 +11,9 @@ import { NotificationConfig, EmailPayload } from "../types";
 import { OrderConfirmationEmail } from "../templates/OrderConfirmationEmail";
 import { OrderStatusEmail } from "../templates/OrderStatusEmail";
 import { AdminNotificationEmail } from "../templates/AdminNotificationEmail";
+import { AuthVerificationEmail } from "../templates/AuthVerificationEmail";
+import { PasswordResetEmail } from "../templates/PasswordResetEmail";
+import { WelcomeEmail } from "../templates/WelcomeEmail";
 
 const MAX_RETRIES = 3;
 
@@ -152,6 +155,69 @@ class NotificationService {
       })
     };
 
+    await this.queueEmail(payload);
+  }
+
+  // ==========================================
+  // AUTH EMAIL METHODS
+  // ==========================================
+
+  /**
+   * Sends a 6-digit OTP verification email after signup.
+   * Called by /api/auth/send-otp route using Supabase Admin to generate the token.
+   */
+  public async sendAuthVerification(
+    to: string,
+    otp: string,
+    customerName?: string
+  ) {
+    const payload: EmailPayload = {
+      to,
+      subject: `${otp} is your Shop Kareta verification code`,
+      templateName: "AuthVerification",
+      react: React.createElement(AuthVerificationEmail, {
+        customerName: customerName || "there",
+        otp,
+        expiresInMinutes: 10,
+      })
+    };
+    await this.queueEmail(payload);
+  }
+
+  /**
+   * Sends a password reset link email.
+   * Called by /api/auth/send-reset route using Supabase Admin to generate the link.
+   */
+  public async sendPasswordReset(
+    to: string,
+    resetUrl: string,
+    customerName?: string
+  ) {
+    const payload: EmailPayload = {
+      to,
+      subject: "Reset your Shop Kareta password",
+      templateName: "PasswordReset",
+      react: React.createElement(PasswordResetEmail, {
+        customerName: customerName || "there",
+        resetUrl,
+        expiresInMinutes: 60,
+      })
+    };
+    await this.queueEmail(payload);
+  }
+
+  /**
+   * Sends a welcome email after a user completes verification.
+   */
+  public async sendWelcomeEmail(to: string, customerName?: string) {
+    const payload: EmailPayload = {
+      to,
+      subject: "Welcome to Shop Kareta! 🎉",
+      templateName: "WelcomeEmail",
+      react: React.createElement(WelcomeEmail, {
+        customerName: customerName || "there",
+      })
+    };
     await this.queueEmail(payload);
   }
 

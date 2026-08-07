@@ -11,13 +11,13 @@ import { useAuthStore } from "@/store/authStore";
 import { PasswordStrength } from "./PasswordStrength";
 import { createClient } from "@/lib/supabase/client";
 
-import { VerificationPending } from "./VerificationPending";
+import { OTPVerification } from "./OTPVerification";
 
 export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
-  // Verification State
+  // OTP Verification State
   const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
 
   const login = useAuthStore((state) => state.login);
@@ -63,19 +63,27 @@ export function RegisterForm() {
       return setError("root", { type: "manual", message: error.message });
     }
     
-    // Switch to Verification Pending UI
+    // Switch to OTP Verification UI
     setVerificationEmail(data.email);
+  };
+
+  const handleVerificationSuccess = () => {
+    router.push("/");
+    router.refresh();
   };
 
   if (verificationEmail) {
     return (
-      <VerificationPending 
+      <OTPVerification 
         email={verificationEmail}
+        type="signup"
+        onSuccess={handleVerificationSuccess}
         onCancel={() => router.push("/login")}
         onChangeEmail={() => setVerificationEmail(null)}
       />
     );
   }
+
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
